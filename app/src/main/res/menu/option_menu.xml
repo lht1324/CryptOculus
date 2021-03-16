@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/coinone"
+        android:title="코인원"
+        app:showAsAction="never" />
+    <item android:id="@+id/bithumb"
+        android:title="빗썸"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/upbit"
+        android:title="업비트"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/huobi"
+        android:title="후오비 코리아"
+        app:showAsAction="never" />
+    <item android:id="@+id/option"
+        android:text="option"
+        android:title="옵션"
+        app:showAsAction="always" />
+</menu>

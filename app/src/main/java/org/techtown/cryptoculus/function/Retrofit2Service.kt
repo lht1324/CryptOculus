@@ -1,0 +1,27 @@
+package org.techtown.cryptoculus.function
+
+import retrofit2.Call
+import retrofit2.http.GET
+import retrofit2.http.Query
+
+interface Retrofit2Service {
+    // https://api.coinone.co.kr/ticker/?currency=all
+    @GET("ticker?")
+    fun getTickersCoinone(@Query("currency") currency: String?): Call<Any>
+
+    // https://api.bithumb.com/public/ticker/ALL_KRW
+    @GET("public/ticker/ALL_KRW")
+    fun getTickersBithumb(): Call<Any>
+
+    // https://api.upbit.com/v1/
+    // https://api.upbit.com/v1/markets/all (Markets)
+    // https://api.upbit.com/v1/ticker?markets=... (Ticker)
+    @GET("markets/all")
+    fun getMarketsUpbit(): Call<Any>
+    @GET("ticker?")
+    fun getTickersUpbit(@Query("markets") markets: String?): Call<Any>
+
+    // https://api-cloud.huobi.co.kr/market/tickers
+    @GET("market/tickers")
+    fun getTickersHuobi(): Call<Any>
+}
