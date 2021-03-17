@@ -49,21 +49,36 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(coinInfo: CoinInfo) {
+            // 이건 binding만 해 주면 되는 함수야
+            // 여기서 가공을 하거나 할 필요가 없는 거다
             binding.viewHolder = this
+            binding.coinInfo = coinInfo
             // imageResource가 null일 경우를 대비해야 한다
-            val imageId =
+            /* val imageId =
                 if (Resources.getSystem().getIdentifier(coinInfo.coinName, "drawable", binding.root.context.packageName) == 0) // 0 means 'cannot find'
                     R.drawable.basic
                 else
                     Resources.getSystem().getIdentifier(coinInfo.coinName, "drawable", binding.root.context.packageName)
 
 
+            binding.imageView.setImageResource(imageId) */
 
+            binding.imageView.setImageResource(
+                if (Resources.getSystem().getIdentifier(coinInfo.coinName, "drawable", binding.root.context.packageName) == 0) // 0 means 'cannot find'
+                    R.drawable.basic
+                else
+                    Resources.getSystem().getIdentifier(coinInfo.coinName, "drawable", binding.root.context.packageName)
+            )
+            binding.coinInfo.coinNameKorean =
+                if (Resources.getSystem().getString(Resources.getSystem().getIdentifier(coinInfo.coinName, "strings", binding.root.context.packageName)).isEmpty())
+                    "신규 상장"
+                else
+                    Resources.getSystem().getString(Resources.getSystem().getIdentifier(coinInfo.coinName, "strings", binding.root.context.packageName))
+            // 상장 폐지도 추가해야 한다
+            // 상장 폐지는 api에 없는데 여기에 있는 경우지
+            // 일단 여기가 아니라 다른 곳에 달아야 하나
 
-            binding.imageView.setImageResource(imageId)
-            coinInfo.coinNameKorean =
-                    if (Resources.getSystem().getString(Resources.getSystem().getIdentifier(coinInfo.coinName, "strings", binding.root.context.packageName))
-            binding.coinInfo = coinInfo
+            binding.textView.text = "${coinInfo.coinName.toUpperCase()} / ${coinInfo.coinNameKorean}"
 
             binding.executePendingBindings()
         }
@@ -71,47 +86,6 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
         fun onClick(coinInfo: CoinInfo) {
             onItemClicked(coinInfo)
 
-            when (exchange) {
-                "coinone" -> {
-                    val ticker = coinInfo.ticker!! as TickerCoinone
-                    val formatter = if (ticker.last.toDouble() - ticker.last.toDouble().roundToInt() != 0.0) DecimalFormat("###,##0.00") else DecimalFormat("###,###")
-                    binding.coinInfo.ticker!!.firstInTicker = formatter.format(ticker.first.toDouble())
-                    binding.coinInfo.ticker!!.lastInTicker = formatter.format(ticker.last.toDouble())
-                    binding.coinInfo.ticker!!.highInTicker = formatter.format(ticker.high.toDouble())
-                    binding.coinInfo.ticker!!.lowInTicker = formatter.format(ticker.low.toDouble())
-                    binding.coinInfo.ticker!!.volumeInTicker = formatter.format(ticker.volume.toDouble())
-                    // binding.coinInfo.ticker.tradeValueInTicker = formatter.format(ticker.)
-                    // 그냥 거래량 같은 걸 추가하는 게 낫지 않아?
-                }
-                "bithumb" -> {
-                    val ticker = coinInfo.ticker!! as TickerBithumb
-                    val formatter = if (ticker.closingPrice.toDouble() - ticker.closingPrice.toDouble().roundToInt() != 0.0) DecimalFormat("###,##0.00") else DecimalFormat("###,###")
-                    binding.coinInfo.ticker!!.firstInTicker = formatter.format(ticker.openingPrice.toDouble())
-                    binding.coinInfo.ticker!!.lastInTicker = formatter.format(ticker.closingPrice.toDouble())
-                    binding.coinInfo.ticker!!.highInTicker = formatter.format(ticker.maxPrice.toDouble())
-                    binding.coinInfo.ticker!!.lowInTicker = formatter.format(ticker.minPrice.toDouble())
-                    binding.coinInfo.ticker!!.volumeInTicker = formatter.format(ticker.unitsTraded.toDouble())
-                }
-                "upbit" -> {
-                    val ticker = coinInfo.ticker!! as TickerUpbit
-                    val formatter = if (ticker.tradePrice.toDouble() - ticker.tradePrice.toDouble().roundToInt() != 0.0) DecimalFormat("###,##0.00") else DecimalFormat("###,###")
-                    binding.coinInfo.ticker!!.firstInTicker = formatter.format(ticker.openingPrice.toDouble())
-                    binding.coinInfo.ticker!!.lastInTicker = formatter.format(ticker.tradePrice.toDouble())
-                    binding.coinInfo.ticker!!.highInTicker = formatter.format(ticker.highPrice.toDouble())
-                    binding.coinInfo.ticker!!.lowInTicker = formatter.format(ticker.lowPrice.toDouble())
-                    binding.coinInfo.ticker!!.volumeInTicker = formatter.format(ticker.tradeVolume.toDouble())
-                }
-                "huobi" -> {
-                    val ticker = coinInfo.ticker!! as TickerHuobi
-                    val formatter = if (ticker.close.toDouble() - ticker.close.toDouble().roundToInt() != 0.0) DecimalFormat("###,##0.00") else DecimalFormat("###,###")
-                    binding.coinInfo.ticker!!.firstInTicker = formatter.format(ticker.open.toDouble())
-                    binding.coinInfo.ticker!!.lastInTicker = formatter.format(ticker.close.toDouble())
-                    binding.coinInfo.ticker!!.highInTicker = formatter.format(ticker.high.toDouble())
-                    binding.coinInfo.ticker!!.lowInTicker = formatter.format(ticker.low.toDouble())
-                    binding.coinInfo.ticker!!.volumeInTicker = formatter.format(ticker.vol.toDouble())
-                }
-            }
-            val context = binding.root.context
             changeVisibility(clicked)
         }
 

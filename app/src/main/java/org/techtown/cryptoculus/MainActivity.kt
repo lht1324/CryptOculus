@@ -1,6 +1,5 @@
 package org.techtown.cryptoculus
 
-import android.content.res.Resources
 import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -46,17 +45,28 @@ class MainActivity : AppCompatActivity() {
         // Exit if touch once more before 2 secs
         // 2초 전에 누르면 종료
         if (System.currentTimeMillis() - backPressedLast < 2000) {
-            getSharedPreferences("restartApp", MODE_PRIVATE)
-                .edit()
-                .putBoolean("restartApp", true)
-                .apply()
-
             finish()
             return
         }
 
         Toast.makeText(this, "종료하려면 뒤로 가기 버튼을\n한 번 더 눌러주세요.", Toast.LENGTH_SHORT).show()
         backPressedLast = System.currentTimeMillis()
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        // 처음 시작했을 때만 restartApp을 삽입
+        // 재시작했을 땐 restartApp을 삽입하지 않는다
+        // 처음 시작: true, 재시작: false
+        if (getSharedPreferences("restartApp", MODE_PRIVATE).getBoolean("restartApp", false)) {
+            getSharedPreferences("restartApp", MODE_PRIVATE)
+                .edit()
+                .putBoolean("restartApp", true)
+                .apply()
+        }
+
+        viewModel.coinDao.updateAll(viewModel.coinInfos)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
