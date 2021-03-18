@@ -9,12 +9,15 @@
         <variable
             name="coinInfo"
             type="org.techtown.cryptoculus.repository.model.CoinInfo" />
+        <variable
+            name="clicked"
+            type="Boolean" />
     </data>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:onClick="@{() -> viewHolder.onClick(coinInfo)}">
+        android:onClick="@{() -> viewHolder.onClick(clicked)}">
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"

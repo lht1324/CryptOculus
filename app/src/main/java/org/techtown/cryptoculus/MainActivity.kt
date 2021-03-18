@@ -1,5 +1,6 @@
 package org.techtown.cryptoculus
 
+import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -109,6 +110,9 @@ class MainActivity : AppCompatActivity() {
     private fun init() {
         viewModel = ViewModelProvider(this, ViewModel.Factory(application)).get(ViewModel::class.java)
         viewModel.onCreate()
+        viewModel.restartApp = getSharedPreferences("restartApp", MODE_PRIVATE)
+                .getBoolean("restartApp", false)
+
         adapter.coinInfos = viewModel.coinInfos
         adapter.exchange = exchange
         binding.apply {
@@ -122,7 +126,12 @@ class MainActivity : AppCompatActivity() {
         }
         viewModel.liveCoinInfos.observe(this, { coinInfos ->
             adapter.coinInfos = coinInfos
-            adapter.exchange = exchange
+            adapter.exchange = exchange // 이건 왜 여기 있냐?
+            // coinInfos가 바뀌었다는 게 2가지니까
+            // 메뉴 눌러서 거래소가 바뀌고 다시 받아왔거나
+            // option에서 눌러서 다시 했거나
+            // 근데 option에서 눌린 걸 즉석으로 할 필요가 없는 거 같은데?
+            // OnDismissListener로 받아서 바뀐 순간에 LiveData<ArrayList>로 넣으면 되잖아
             binding.recyclerView.adapter = adapter
         })
     }
@@ -150,7 +159,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openOptionDialog() {
+        val optionDialog = OptionDialog(this)
+        optionDialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
+        optionDialog.setOnDismissListener {
+            viewModel.updateCoinInfos(optionDialog.optionAdapter.coinInfos)
+        }
+
+        optionDialog.setCancelable(true)
+        optionDialog.show()
     }
 
     private fun println(data: String) {

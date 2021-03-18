@@ -14,7 +14,7 @@ interface Retrofit2Service {
     fun getTickersBithumb(): Call<Any>
 
     // https://api.upbit.com/v1/
-    // https://api.upbit.com/v1/markets/all (Markets)
+    // https://api.upbit.com/v1/market/all (Markets)
     // https://api.upbit.com/v1/ticker?markets=... (Ticker)
     @GET("markets/all")
     fun getMarketsUpbit(): Call<Any>

@@ -19,16 +19,12 @@ import kotlin.math.roundToInt
 class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
     var coinInfos = ArrayList<CoinInfo>()
     var exchange = ""
-    var clicked = false
     private val onItemClicked = MutableLiveData<CoinInfo>()
     val onItemMoved = MutableLiveData<ArrayList<Int>>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         val binding = ItemCoinBinding.inflate(inflater, parent, false)
-
-        binding.imageView.setImageResource(R.drawable.abl)
-        // 시가, 종가, 고가, 저가, 거래량, 전일대비, 거래대금
 
         return ViewHolder(binding,
             onItemClicked = { coinInfo ->
@@ -69,28 +65,31 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
                 else
                     Resources.getSystem().getIdentifier(coinInfo.coinName, "drawable", binding.root.context.packageName)
             )
-            binding.coinInfo.coinNameKorean =
+            /* binding.coinInfo.coinNameKorean =
                 if (Resources.getSystem().getString(Resources.getSystem().getIdentifier(coinInfo.coinName, "strings", binding.root.context.packageName)).isEmpty())
                     "신규 상장"
                 else
                     Resources.getSystem().getString(Resources.getSystem().getIdentifier(coinInfo.coinName, "strings", binding.root.context.packageName))
+            */
+            // coinNameKorean도 밖에서 해 줘야 하는 거 아냐?
+            // 근데 뷰모델에서 어떻게 액세스하냐
             // 상장 폐지도 추가해야 한다
             // 상장 폐지는 api에 없는데 여기에 있는 경우지
             // 일단 여기가 아니라 다른 곳에 달아야 하나
 
-            binding.textView.text = "${coinInfo.coinName.toUpperCase()} / ${coinInfo.coinNameKorean}"
+            binding.textView.text = "${coinInfo.coinName} / ${coinInfo.coinNameKorean}"
+
+            binding.clicked = false
 
             binding.executePendingBindings()
         }
 
-        fun onClick(coinInfo: CoinInfo) {
-            onItemClicked(coinInfo)
-
+        fun onClick(clicked: Boolean) {
             changeVisibility(clicked)
         }
 
         private fun changeVisibility(isExpanded: Boolean) {
-            clicked = !clicked
+            binding.clicked = !(binding.clicked)
             // ValueAnimator.ofInt(int... values)는 View가 변할 값을 지정, 인자는 int 배열
             val valueAnimator = if (isExpanded) ValueAnimator.ofInt(0, 600) else ValueAnimator.ofInt(600, 0)
             // Animation이 실행되는 시간, n/1000초

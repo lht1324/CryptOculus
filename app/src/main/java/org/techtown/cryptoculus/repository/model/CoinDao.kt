@@ -15,7 +15,7 @@ interface CoinDao {
     fun getId(coinName: String, coinViewCheck: Int): Int
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insert(coinInfo: CoinInfo): Long
+    fun insert(coinInfo: CoinInfo)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insertAll(coinInfos: ArrayList<CoinInfo>)
@@ -25,7 +25,4 @@ interface CoinDao {
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
     fun updateAll(coinInfos: ArrayList<CoinInfo>)
-
-    @Delete
-    fun delete(coinInfo: CoinInfo)
 }

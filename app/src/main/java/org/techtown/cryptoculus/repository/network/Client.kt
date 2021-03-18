@@ -20,8 +20,7 @@ class Client {
     // 재실행 시 저장된 키 값을 전부 불러온 뒤 다시 키 값을 따 오고, 비교한다
     // DB에 없으면 신규상장, DB에 있는데 ALL에 없으면 상장폐지
     // DB에 없으면 넣어준 다음 추가한다
-    // 여기서 한글 이름 넣어줘야 하나?
-    // coinName 말고 coinNameKorean 같은 걸로 해서
+    // Parse 부분에서 id 생성해줘야 할 거 같은데
 
     val coinoneUrl = "https://api.coinone.co.kr/"
     val bithumbUrl = "https://api.bithumb.co.kr/"
@@ -106,7 +105,7 @@ class Client {
         for (i in coinNames.indices) {
             val coinInfo = CoinInfo()
             coinInfo.ticker = gson.fromJson(jsonObject.get(coinNames[i]).toString(), TickerCoinone::class.java)
-            coinInfo.coinName = coinNames[i]
+            coinInfo.coinNameOriginal = coinNames[i]
             coinInfos.add(coinInfo)
             // tickersCoinone.add(gson.fromJson(jsonObject.get(coinNames[i]).toString(), TickerCoinone::class.java))
         }
@@ -124,7 +123,7 @@ class Client {
         for (i in coinNames.indices) {
             val coinInfo = CoinInfo()
             coinInfo.ticker = gson.fromJson(data.get(coinNames[i]).toString(), TickerBithumb::class.java)
-            coinInfo.coinName = coinNames[i]
+            coinInfo.coinNameOriginal = coinNames[i]
             coinInfos.add(coinInfo)
             // tickersBithumb.add(gson.fromJson(data.get(coinNames[i]).toString(), TickerBithumb::class.java))
         }
@@ -153,7 +152,7 @@ class Client {
 
         for (i in 0..jsonArray.length()) {
             val coinInfo = CoinInfo()
-            coinInfo.coinName = coinNames[i]
+            coinInfo.coinNameOriginal = coinNames[i]
 
             coinInfo.ticker = gson.fromJson(jsonArray[i].toString(), TickerUpbit::class.java)
             coinInfos.add(coinInfo)
@@ -169,7 +168,7 @@ class Client {
         for (i in 0..data.length()) {
             if (data.getJSONObject(i).toString().contains("krw")) {
                 val coinInfo = CoinInfo()
-                coinInfo.coinName = data.getJSONObject(i).getString("symbol")
+                coinInfo.coinNameOriginal = data.getJSONObject(i).getString("symbol")
                 coinInfo.ticker = gson.fromJson(data.getJSONObject(i).toString(), TickerHuobi::class.java)
                 coinInfos.add(coinInfo)
                 // tickersHuobi.add(gson.fromJson(data.getString(i), TickerHuobi::class.java))
