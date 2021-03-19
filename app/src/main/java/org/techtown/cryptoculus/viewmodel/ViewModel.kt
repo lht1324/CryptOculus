@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModelProvider
 import io.reactivex.Observable
 import io.reactivex.rxjava3.observers.DisposableObserver
 import io.reactivex.rxjava3.subjects.PublishSubject
+import org.techtown.cryptoculus.repository.CoinRepository
 import org.techtown.cryptoculus.repository.model.CoinDao
 import org.techtown.cryptoculus.repository.model.CoinDatabase
 import org.techtown.cryptoculus.repository.model.CoinInfo
@@ -25,6 +26,9 @@ class ViewModel(application: Application) : ViewModel(){
     var coinInfos = ArrayList<CoinInfo>()
     val publishSubject: PublishSubject<String> = PublishSubject.create()
     val coinDao: CoinDao = CoinDatabase.getInstance(application)!!.coinDao()
+    private val coinRepository: CoinRepository by lazy {
+        CoinRepository(application)
+    }
     var restartApp = false
     var exchange = "coinone"
     // client.getData()를 getResponse()로 바꿔버릴까?
