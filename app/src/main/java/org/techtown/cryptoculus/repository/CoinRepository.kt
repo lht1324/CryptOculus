@@ -13,7 +13,8 @@ import org.techtown.cryptoculus.repository.network.DataParser
 class CoinRepository(application: Application) {
     private val coinDao: CoinDao by lazy { CoinDatabase.getInstance(application)!!.coinDao() }
     // val client = Client().retrofitService
-    var executeNetwork = true // true -> client, false -> dao
+    var executeNetwork = true
+    // true -> client, false -> dao
     var exchange = "coinone"
 
     // DB에서 가져오든 Network에서 받아오든

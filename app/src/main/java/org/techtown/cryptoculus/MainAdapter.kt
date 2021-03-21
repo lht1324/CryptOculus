@@ -17,7 +17,7 @@ import java.text.DecimalFormat
 import kotlin.math.roundToInt
 
 class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
-    var coinInfos = MutableLiveData<ArrayList<CoinInfo>>()
+    var coinInfos = ArrayList<CoinInfo>()
     var exchange = ""
     private val onItemClicked = MutableLiveData<CoinInfo>()
     val onItemMoved = MutableLiveData<ArrayList<Int>>()

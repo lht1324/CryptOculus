@@ -69,8 +69,6 @@ class ViewModel(application: Application) : ViewModel(){
     // repository의 coinInfos가 어떤 이유로든 바뀌면 얻어오는 걸로 할까
     // API를 새로 받거나 거래소가 바뀌거나
 
-    fun getData(exchange: String) = coinRepository.getData(exchange)
-
     fun insert(coinInfo: CoinInfo, next: () -> Unit) {
         disposable.add(coinRepository.insert(coinInfo)
                 .subscribeOn(Schedulers.io())
