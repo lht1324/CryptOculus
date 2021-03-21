@@ -16,15 +16,8 @@ import org.techtown.cryptoculus.repository.network.DataParser
 import org.techtown.cryptoculus.repository.network.RetrofitClient
 
 class ViewModel(application: Application) : ViewModel(){
-    // id는 어쩌지?
-    // 거래소마다 종목이 다른 건데
-    // 각각 다르게 해야 하나?
-    // exchange도 저장해야 할 거 같은데
-    // 기존에 보고 있던 걸 보여주는 게 낫잖아
     // !restartApp -> insert(), restartApp -> update()
-    private val client = RetrofitClient()
-    private val dataParser = DataParser()
-    // var coinInfos = ArrayList<CoinInfo>()
+
     val publishSubject: PublishSubject<String> = PublishSubject.create()
 
     private val disposable: CompositeDisposable = CompositeDisposable()
@@ -32,7 +25,7 @@ class ViewModel(application: Application) : ViewModel(){
         CoinRepository(application)
     }
 
-    private val coinInfos: LiveData<ArrayList<CoinInfo>> by lazy {
+    private val coinInfos: MutableLiveData<ArrayList<CoinInfo>> by lazy {
         coinRepository.getCoinInfos()
         // 이렇게 해 놓으면 액티비티에서 viewModel.coinInfos가 호출될 때마다
         // 자동으로 업데이트 될 수 있다
@@ -42,7 +35,7 @@ class ViewModel(application: Application) : ViewModel(){
 
     init {
         publishSubject.subscribe { exchange ->
-            liveCoinInfos.value = client.getData(exchange)
+            this.exchange = exchange
 
             // 연동을 해버릴까?
             // 다른 rx랑 말이야
@@ -52,7 +45,6 @@ class ViewModel(application: Application) : ViewModel(){
     }
 
     // val coinInfos = ArrayList<CoinInfo>()
-    val liveCoinInfos = MutableLiveData<ArrayList<CoinInfo>>() // MainActivity에서 observe 후 변경되면 어댑터 재설정
 
     class Factory(private val application: Application) : ViewModelProvider.Factory {
         override fun <T : ViewModel?> create(modelClass: Class<T>): T{
@@ -74,10 +66,10 @@ class ViewModel(application: Application) : ViewModel(){
     // 크게 보면 결국 coinInfos를 얻어오는 거긴 한데
     // DB에서 가져오는 거든 새로 받아오는 거든
     // 어쨌든 repository에서 받아야 한단 말이지
+    // repository의 coinInfos가 어떤 이유로든 바뀌면 얻어오는 걸로 할까
+    // API를 새로 받거나 거래소가 바뀌거나
 
-    fun getCoinInfo(exchange: String, coinName: String): LiveData<CoinInfo> {
-        return coinRepository.getCoinInfo(exchange, coinName)
-    }
+    fun getData(exchange: String) = coinRepository.getData(exchange)
 
     fun insert(coinInfo: CoinInfo, next: () -> Unit) {
         disposable.add(coinRepository.insert(coinInfo)

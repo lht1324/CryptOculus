@@ -12,85 +12,66 @@ import org.techtown.cryptoculus.repository.network.DataParser
 
 class CoinRepository(application: Application) {
     private val coinDao: CoinDao by lazy { CoinDatabase.getInstance(application)!!.coinDao() }
-    private val coinInfos: ArrayList<CoinInfo> by lazy { coinDao.getAll() as ArrayList<CoinInfo> }
-    val client = Client().retrofitService
-    val response = MutableLiveData<String>()
+    // val client = Client().retrofitService
+    var executeNetwork = true // true -> client, false -> dao
+    var exchange = "coinone"
 
-    val coinone = "coinone"
-    val bithumb = "bithumb"
-    val upbit = "upbit"
-    val huobi = "huobi"
-    val coinoneUrl = "https://api.coinone.co.kr/"
-    val bithumbUrl = "https://api.bithumb.co.kr/"
-    val huobiUrl = "https://api-cloud.huobi.co.kr/"
-    val upbitUrl = "https://api.upbit.com/v1/"
-    var url = ""
+    // DB에서 가져오든 Network에서 받아오든
+    // 결국 coinInfos는 바뀐다
 
-    // dataParser.parseUpbit(
-    //     client.getUpbitTickers(
-    //         dataParser.parseUpbitMarkets(
-    //             client.getUpbitMarkets()
-    //         )
-    //     )
-    // )
-    // Markets를 구한다 (getResponse, parse) -> Tickers를 얻어온다 (getResponse(markets), parse)
+    fun getCoinInfos(): MutableLiveData<ArrayList<CoinInfo>> {
+        return if (executeNetwork)
+            Client.getData(exchange)
+        else
+            coinDao.getAll() as MutableLiveData<ArrayList<CoinInfo>>
+        // return coinDao.getAll() as MutableLiveData<ArrayList<CoinInfo>> // 오류 가능성 존재
+        // 이게 아니라 coinInfos를 해야 하는 것 아닐까
+    }
 
-    fun getData(exchange: String): MutableLiveData<String> { // 실행 시 parsing까지 마친 ArrayList<CoinInfo>를 출력
+    /* fun getData(exchange: String): MutableLiveData<ArrayList<CoinInfo>> { // 실행 시 parsing까지 마친 ArrayList<CoinInfo>를 출력
         val parser = DataParser()
+        lateinit var coinInfos: ArrayList<CoinInfo>
         val call: retrofit2.Call<Any> =
-                when (url) {
-                    coinoneUrl ->
+                when (exchange) {
+                    coinone ->
                         client.getTickersCoinone("all")
-                    bithumbUrl ->
+                    bithumb ->
                         client.getTickersBithumb()
-                    upbitUrl -> {
-                        client.getTickersUpbit(getData("upbitMarket").value)
-                        /* if (value.isNotBlank()) client.getMarketsUpbit()
-                        else client.getTickersUpbit(value) */
-                    }
-                    huobiUrl ->
-                        client.getTickersHuobi()
+                    upbit ->
+                        client.getTickersUpbit(getMarketsUpbit())
                     else ->
-                        client.getMarketsUpbit()
+                        client.getTickersHuobi()
                 }
 
         call.enqueue(object : retrofit2.Callback<Any> {
             override fun onResponse(call: retrofit2.Call<Any>, response: retrofit2.Response<Any>) {
-                parser.processData(exchange, response.body().toString())
+                coinInfos = parser.getParsedData(exchange, response.body().toString())
                 // processData without parameters?
-                // 확실히 저거면 by lazy로 coinInfos 만들 수 있긴 하지
-                /* when (url) {
-                    coinoneUrl ->
-                        parser.parseCoinone(response.body().toString())
-                    bithumbUrl ->
-                        parseBithumb(response.body().toString())
-                    upbitUrl -> {
-                        if (value.isBlank()) parseUpbitMarkets(response.body().toString())
-                        else parseUpbitTickers(response.body().toString(), value)
-                    }
-                    huobiUrl ->
-                        parseHuobi(response.body().toString())
-                    else -> {
-                        println("Connection failed in onResponse.")
-                        return
-                    }
-                } */
             }
             override fun onFailure(call: retrofit2.Call<Any>, t: Throwable) {
                 println("Retrofit process is failed.")
             }
         })
-        response.value = ""
-        return response
+
+
     }
 
-    fun getCoinInfo(exchange: String, coinName: String): LiveData<CoinInfo> {
-        return coinDao.getCoinInfo(exchange, coinName)
-    }
+    fun getMarketsUpbit(): String {
+        val parser = DataParser()
+        val call: retrofit2.Call<Any> = client.getMarketsUpbit()
+        lateinit var markets: String
 
-    fun getCoinInfos(): LiveData<ArrayList<CoinInfo>> {
-        return coinDao.getAll() as LiveData<ArrayList<CoinInfo>> // 오류 가능성 존재
-    }
+        call.enqueue(object : retrofit2.Callback<Any> {
+            override fun onResponse(call: retrofit2.Call<Any>, response: retrofit2.Response<Any>) {
+                markets = parser.parseUpbitMarkets(response.body().toString())
+            }
+            override fun onFailure(call: retrofit2.Call<Any>, t: Throwable) {
+                println("Retrofit process is failed.")
+            }
+        })
+
+        return markets
+    } */
 
     fun insert(coinInfo: CoinInfo): Observable<Unit> {
         return Observable.fromCallable { coinDao.insert(coinInfo) }

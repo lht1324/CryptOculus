@@ -113,7 +113,7 @@ class MainActivity : AppCompatActivity() {
         viewModel.restartApp = getSharedPreferences("restartApp", MODE_PRIVATE)
                 .getBoolean("restartApp", false)
 
-        adapter.coinInfos = viewModel.coinInfos
+        adapter.coinInfos = viewModel.getCoinInfos()
         adapter.exchange = exchange
         binding.apply {
             recyclerView.adapter = adapter
@@ -124,13 +124,8 @@ class MainActivity : AppCompatActivity() {
                 //
             }
         }
-        viewModel.liveCoinInfos.observe(this, { coinInfos ->
-            adapter.coinInfos = coinInfos
-            adapter.exchange = exchange
-            binding.recyclerView.adapter = adapter
-        })
         viewModel.getCoinInfos().observe(this, { coinInfos ->
-            adapter.coinInfos = coinInfos
+            adapter.coinInfos.value = coinInfos
             adapter.exchange = exchange
             // 이건 왜 여기 있냐?
             // coinInfos가 바뀌었다는 게 2가지니까
