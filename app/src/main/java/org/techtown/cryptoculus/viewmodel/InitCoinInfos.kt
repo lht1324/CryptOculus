@@ -10,7 +10,7 @@ import org.techtown.cryptoculus.ticker.TickerUpbit
 import java.text.DecimalFormat
 import kotlin.math.roundToInt
 
-class InitCoinInfos {
+object InitCoinInfos {
     // coinNames 형식 통일하기
     // coinNamesKorean 가져오기
     // coinone -> "btc": toUpperCase()

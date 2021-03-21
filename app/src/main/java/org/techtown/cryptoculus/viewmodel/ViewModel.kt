@@ -2,17 +2,18 @@ package org.techtown.cryptoculus.viewmodel
 
 import android.app.Application
 import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import io.reactivex.Observable
-import io.reactivex.rxjava3.observers.DisposableObserver
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.schedulers.Schedulers
 import io.reactivex.rxjava3.subjects.PublishSubject
 import org.techtown.cryptoculus.repository.CoinRepository
-import org.techtown.cryptoculus.repository.model.CoinDao
-import org.techtown.cryptoculus.repository.model.CoinDatabase
 import org.techtown.cryptoculus.repository.model.CoinInfo
-import org.techtown.cryptoculus.repository.network.Client
+import org.techtown.cryptoculus.repository.network.DataParser
+import org.techtown.cryptoculus.repository.network.RetrofitClient
 
 class ViewModel(application: Application) : ViewModel(){
     // id는 어쩌지?
@@ -21,28 +22,23 @@ class ViewModel(application: Application) : ViewModel(){
     // exchange도 저장해야 할 거 같은데
     // 기존에 보고 있던 걸 보여주는 게 낫잖아
     // !restartApp -> insert(), restartApp -> update()
-    private val client = Client()
+    private val client = RetrofitClient()
     private val dataParser = DataParser()
-    var coinInfos = ArrayList<CoinInfo>()
+    // var coinInfos = ArrayList<CoinInfo>()
     val publishSubject: PublishSubject<String> = PublishSubject.create()
-    val coinDao: CoinDao = CoinDatabase.getInstance(application)!!.coinDao()
+
+    private val disposable: CompositeDisposable = CompositeDisposable()
     private val coinRepository: CoinRepository by lazy {
         CoinRepository(application)
     }
+
+    private val coinInfos: LiveData<ArrayList<CoinInfo>> by lazy {
+        coinRepository.getCoinInfos()
+        // 이렇게 해 놓으면 액티비티에서 viewModel.coinInfos가 호출될 때마다
+        // 자동으로 업데이트 될 수 있다
+    }
     var restartApp = false
     var exchange = "coinone"
-    // client.getData()를 getResponse()로 바꿔버릴까?
-    // 그걸 dataParser에 넘겨주는 거야
-    // dataParser.parseUpbit(
-    //     client.getUpbitTickers(
-    //         dataParser.parseUpbitMarkets(
-    //             client.getUpbitMarkets()
-    //         )
-    //     )
-    // )
-    // 대충 이런 느낌이겠지
-    // Respository { dataParser, client }
-    // 이게 맞는 거 아닐까
 
     init {
         publishSubject.subscribe { exchange ->
@@ -55,11 +51,6 @@ class ViewModel(application: Application) : ViewModel(){
         }.dispose()
     }
 
-    // 이 경우에 통지하는 건 MainActivity지
-    // 옵저버가 여기서 받아야 하는 거고
-    // onNext가 실행되면 observer는 그걸 받아서 가공하는 거지
-    // ???
-
     // val coinInfos = ArrayList<CoinInfo>()
     val liveCoinInfos = MutableLiveData<ArrayList<CoinInfo>>() // MainActivity에서 observe 후 변경되면 어댑터 재설정
 
@@ -70,58 +61,50 @@ class ViewModel(application: Application) : ViewModel(){
     }
 
     fun onCreate() {
-        coinInfos =
-                if (coinDao.getAll().isNotEmpty())
-                    coinDao.getAll() as ArrayList<CoinInfo>
-                else {
-                    client.getData("coinone")
-                }
-        // 이러면 안 되지
-        // 이건 비교할 때만 써야 하는 거야
-        // getData로 받은 response 넣을 때 같이 넣는 걸로 하자
+
     }
 
-    fun getData() {
-        // 1. execute client
-        // 2. parse data from client
-        // coinone
-        // getResponse() -> parseCoinone()
-        // bithumb
-        // getResponse() -> parseBithumb()
-        // upbit
-        // getResponse() -> parseUpbitMarkets() -> getResponse() -> parseUpbitTickers()
-        // huobi
-        // getResponse() -> parseHuobi
-        when (exchange) {
-            "coinone" -> {
-                client.getData(exchange)
-            }
-            "bithumb" -> {
-
-            }
-            "upbit" -> {
-                /*
-                dataParser.parseUpbit(
-                        client.getUpbitTickers(
-                                dataParser.parseUpbitMarkets(
-                                        client.getUpbitMarkets()
-                                )
-                        )
-                )
-                */
-            }
-            "huobi" -> {
-
-            }
-            else -> {
-
-            }
-        }
+    override fun onCleared() {
+        super.onCleared()
+        disposable.dispose()
     }
 
-    fun updateCoinInfos(coinInfos: ArrayList<CoinInfo>) {
-        this.coinInfos = coinInfos
-        liveCoinInfos.value = coinInfos
+    @JvmName("getCoinInfos1") // 구조 상 존재하는 'coinInfos'의 getter와 충돌 방지
+    fun getCoinInfos() = coinInfos
+    // 크게 보면 결국 coinInfos를 얻어오는 거긴 한데
+    // DB에서 가져오는 거든 새로 받아오는 거든
+    // 어쨌든 repository에서 받아야 한단 말이지
+
+    fun getCoinInfo(exchange: String, coinName: String): LiveData<CoinInfo> {
+        return coinRepository.getCoinInfo(exchange, coinName)
+    }
+
+    fun insert(coinInfo: CoinInfo, next: () -> Unit) {
+        disposable.add(coinRepository.insert(coinInfo)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { next() })
+    }
+
+    fun update(coinInfo: CoinInfo, next: () -> Unit) {
+        disposable.add(coinRepository.update(coinInfo)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { next() })
+    }
+
+    fun insertAll(coinInfos: ArrayList<CoinInfo>, next: () -> Unit) {
+        disposable.add(coinRepository.insertAll(coinInfos as List<CoinInfo>)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { next() })
+    }
+
+    fun updateAll(coinInfos: ArrayList<CoinInfo>, next: () -> Unit) {
+        disposable.add(coinRepository.updateAll(coinInfos as List<CoinInfo>)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { next() })
     }
 
     fun println(data: String) {

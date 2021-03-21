@@ -4,8 +4,6 @@ import android.util.Log
 import com.google.gson.Gson
 import org.json.JSONArray
 import org.json.JSONObject
-import org.techtown.cryptoculus.R
-import org.techtown.cryptoculus.function.Retrofit2Service
 import org.techtown.cryptoculus.repository.model.CoinInfo
 import org.techtown.cryptoculus.ticker.TickerBithumb
 import org.techtown.cryptoculus.ticker.TickerCoinone
@@ -14,7 +12,7 @@ import org.techtown.cryptoculus.ticker.TickerUpbit
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-class Client {
+class RetrofitClient {
     // ALL을 받아온 다음 키 값을 따서 저장한다. 첫 실행 시에는 즉석에서 파싱한다
     // 첫 실행 시 종료할 때는 키 값을 전부 저장한다
     // 재실행 시 저장된 키 값을 전부 불러온 뒤 다시 키 값을 따 오고, 비교한다
@@ -28,6 +26,11 @@ class Client {
     val upbitUrl = "https://api.upbit.com/v1/"
     var url = ""
 
+    val retrofitClient: Retrofit.Builder by lazy {
+        Retrofit.Builder()
+                .baseUrl(url)
+                .addConverterFactory(GsonConverterFactory.create())
+    }
     lateinit var coinInfos: ArrayList<CoinInfo>
 
     fun getData(exchange: String): ArrayList<CoinInfo> {
@@ -49,7 +52,7 @@ class Client {
             .addConverterFactory(GsonConverterFactory.create())
 
         val retrofit: Retrofit = builder.build()
-        val client: Retrofit2Service = retrofit.create(Retrofit2Service::class.java)
+        val client: RetrofitService = retrofit.create(RetrofitService::class.java)
 
         val call: retrofit2.Call<Any> =
             when (url) {

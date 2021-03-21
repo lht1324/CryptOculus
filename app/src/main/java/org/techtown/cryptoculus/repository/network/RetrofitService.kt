@@ -1,10 +1,10 @@
-package org.techtown.cryptoculus.function
+package org.techtown.cryptoculus.repository.network
 
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-interface Retrofit2Service {
+interface RetrofitService {
     // https://api.coinone.co.kr/ticker/?currency=all
     @GET("ticker?")
     fun getTickersCoinone(@Query("currency") currency: String?): Call<Any>

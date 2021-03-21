@@ -67,7 +67,7 @@ class MainActivity : AppCompatActivity() {
                 .apply()
         }
 
-        viewModel.coinDao.updateAll(viewModel.coinInfos)
+        // viewModel.coinDao.updateAll(viewModel.coinInfos)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -126,7 +126,13 @@ class MainActivity : AppCompatActivity() {
         }
         viewModel.liveCoinInfos.observe(this, { coinInfos ->
             adapter.coinInfos = coinInfos
-            adapter.exchange = exchange // 이건 왜 여기 있냐?
+            adapter.exchange = exchange
+            binding.recyclerView.adapter = adapter
+        })
+        viewModel.getCoinInfos().observe(this, { coinInfos ->
+            adapter.coinInfos = coinInfos
+            adapter.exchange = exchange
+            // 이건 왜 여기 있냐?
             // coinInfos가 바뀌었다는 게 2가지니까
             // 메뉴 눌러서 거래소가 바뀌고 다시 받아왔거나
             // option에서 눌러서 다시 했거나
@@ -163,7 +169,7 @@ class MainActivity : AppCompatActivity() {
         optionDialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
         optionDialog.setOnDismissListener {
-            viewModel.updateCoinInfos(optionDialog.optionAdapter.coinInfos)
+            viewModel.updateAll(optionDialog.optionAdapter.coinInfos) { finish() }
         }
 
         optionDialog.setCancelable(true)
