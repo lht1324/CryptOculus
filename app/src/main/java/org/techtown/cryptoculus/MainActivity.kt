@@ -22,12 +22,9 @@ class MainActivity : AppCompatActivity() {
     // 터치하기 전엔 간단한 정보만 보여주다가 터치하면 상세 정보
     // 터치한 곳에 버튼 넣어서 거래소 차트로 연결해주기
     
-    /* private val coinoneUrl = "https://api.coinone.co.kr/"
-    private val bithumbUrl = "https://api.bithumb.co.kr/"
-    private val huobiUrl = "https://api-cloud.huobi.co.kr/"
-    private val upbitUrl = "https://api.upbit.com/v1/"
-    private var url = coinoneUrl */
-    private var exchange = "coinone"
+    // coinInfos 변경되는 경우
+    // 메뉴 클릭
+    // swipeRefreshLayout 작동
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: ViewModel
     private val adapter = MainAdapter()
@@ -96,14 +93,13 @@ class MainActivity : AppCompatActivity() {
             R.id.huobi -> {
                 viewModel.publishSubject.onNext("huobi")
                 viewModel.publishSubject.onComplete()
-                changeLayout("upbit")
+                changeLayout("huobi")
             }
             else -> openOptionDialog()
         }
-        // 기준 url인 거 다른 걸로 바꿔볼까?
-        // 기존 코드에선 바뀐 url 기준으로 getData()랑 init() 새로 하는 방식이었는데
-        // 어차피 하려면 뷰모델에서 해야 한단 말이지
-        // 뷰모델 기준 url을 바꾸는 걸로 해야 하나?
+        // exchange를 바꿔줬으니까 coinInfos를 불러와야지
+        // 어떤 걸로 불러오든 액티비티는 띄우기만 하면 되는 거야
+        // 여기서 어댑터 재설정하든가 해라
         return true
     }
 
@@ -114,25 +110,13 @@ class MainActivity : AppCompatActivity() {
                 .getBoolean("restartApp", false)
 
         adapter.coinInfos = viewModel.getCoinInfos().value!!
-        adapter.exchange = exchange
         binding.apply {
             recyclerView.adapter = adapter
             swipeRefreshLayout.setOnRefreshListener {
-
-                // 기존엔 getData() -> init()을 해야 했다
-                // 근데 이번엔 init()을 한 번만 해도 되게 만들 거란 말이야
-                //
             }
         }
         viewModel.getCoinInfos().observe(this, { coinInfos ->
             adapter.coinInfos = coinInfos
-            adapter.exchange = exchange
-            // 이건 왜 여기 있냐?
-            // coinInfos가 바뀌었다는 게 2가지니까
-            // 메뉴 눌러서 거래소가 바뀌고 다시 받아왔거나
-            // option에서 눌러서 다시 했거나
-            // 근데 option에서 눌린 걸 즉석으로 할 필요가 없는 거 같은데?
-            // OnDismissListener로 받아서 바뀐 순간에 LiveData<ArrayList>로 넣으면 되잖아
             binding.recyclerView.adapter = adapter
         })
     }

@@ -49,7 +49,7 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
             // 여기서 가공을 하거나 할 필요가 없는 거다
             binding.viewHolder = this
             binding.coinInfo = coinInfo
-            // imageResource가 null일 경우를 대비해야 한다
+
             /* val imageId =
                 if (Resources.getSystem().getIdentifier(coinInfo.coinName, "drawable", binding.root.context.packageName) == 0) // 0 means 'cannot find'
                     R.drawable.basic
@@ -65,17 +65,6 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
                 else
                     Resources.getSystem().getIdentifier(coinInfo.coinName, "drawable", binding.root.context.packageName)
             )
-            /* binding.coinInfo.coinNameKorean =
-                if (Resources.getSystem().getString(Resources.getSystem().getIdentifier(coinInfo.coinName, "strings", binding.root.context.packageName)).isEmpty())
-                    "신규 상장"
-                else
-                    Resources.getSystem().getString(Resources.getSystem().getIdentifier(coinInfo.coinName, "strings", binding.root.context.packageName))
-            */
-            // coinNameKorean도 밖에서 해 줘야 하는 거 아냐?
-            // 근데 뷰모델에서 어떻게 액세스하냐
-            // 상장 폐지도 추가해야 한다
-            // 상장 폐지는 api에 없는데 여기에 있는 경우지
-            // 일단 여기가 아니라 다른 곳에 달아야 하나
 
             binding.textView.text = "${coinInfo.coinName} / ${coinInfo.coinNameKorean}"
 

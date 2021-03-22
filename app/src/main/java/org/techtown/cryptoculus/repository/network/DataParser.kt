@@ -15,10 +15,6 @@ import org.techtown.cryptoculus.viewmodel.InitCoinInfos
 
 class DataParser {
     val disposable: CompositeDisposable = CompositeDisposable()
-    val upbitMarkets: String by lazy {
-        ""
-        // parseUpbitMarkets 직후 해야 한다
-    }
 
     // Unit 넣어주는 걸로 대신하면 안 되나?
     // disposable 같은 걸로 Unit 넣은 다음에
@@ -45,8 +41,7 @@ class DataParser {
             "coinone" -> parseCoinone(response)
             "bithumb" -> parseBithumb(response)
             "upbit" -> parseUpbitTickers(response, exchange)
-            "huobi" -> parseHuobi(response)
-            else -> ArrayList<CoinInfo>() // 얘 때문에 return when은 안 된다
+            else -> parseHuobi(response)
         }
         // 여기선 결국 parse한 결과물만 뱉으면 된다
         // 어?

@@ -14,32 +14,37 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    // ALL을 받아온 다음 키 값을 따서 저장한다. 첫 실행 시에는 즉석에서 파싱한다
-    // 첫 실행 시 종료할 때는 키 값을 전부 저장한다
-    // 재실행 시 저장된 키 값을 전부 불러온 뒤 다시 키 값을 따 오고, 비교한다
-    // DB에 없으면 신규상장, DB에 있는데 ALL에 없으면 상장폐지
-    // DB에 없으면 넣어준 다음 추가한다
-    // Parse 부분에서 id 생성해줘야 할 거 같은데
-
     val coinone = "coinone"
     val bithumb = "bithumb"
     val upbit = "upbit"
     val huobi = "huobi"
-    var url = ""
 
     fun getData(exchange: String): MutableLiveData<ArrayList<CoinInfo>> { // 실행 시 parsing까지 마친 ArrayList<CoinInfo>를 출력
+        val url = when(exchange) {
+            coinone -> "https://api.coinone.co.kr/"
+            bithumb -> "https://api.bithumb.com/"
+            upbit -> "https://api.upbit.com/v1/"
+            else -> "https://api-cloud.huobi.co.kr/"
+        }
         val parser = DataParser()
         lateinit var coinInfos: ArrayList<CoinInfo>
+
+        val builder = Retrofit.Builder()
+                .baseUrl(url)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(RetrofitService::class.java)
+
         val call: retrofit2.Call<Any> =
                 when (exchange) {
                     coinone ->
-                        retrofitService.getTickersCoinone("all")
+                        builder.getTickersCoinone("all")
                     bithumb ->
-                        retrofitService.getTickersBithumb()
+                        builder.getTickersBithumb()
                     upbit ->
-                        retrofitService.getTickersUpbit(getMarketsUpbit())
+                        builder.getTickersUpbit(getMarketsUpbit())
                     else ->
-                        retrofitService.getTickersHuobi()
+                        builder.getTickersHuobi()
                 }
 
         call.enqueue(object : retrofit2.Callback<Any> {
@@ -48,7 +53,7 @@ object RetrofitClient {
                 // processData without parameters?
             }
             override fun onFailure(call: retrofit2.Call<Any>, t: Throwable) {
-                kotlin.io.println("Retrofit process is failed.")
+                println("Retrofit process is failed.")
             }
         })
 
@@ -57,8 +62,15 @@ object RetrofitClient {
 
     private fun getMarketsUpbit(): String {
         val parser = DataParser()
-        val call: retrofit2.Call<Any> = retrofitService.getMarketsUpbit()
         lateinit var markets: String
+
+        val builder = Retrofit.Builder()
+                .baseUrl("https://api.upbit.com/v1/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(RetrofitService::class.java)
+
+        val call: retrofit2.Call<Any> = builder.getMarketsUpbit()
 
         call.enqueue(object : retrofit2.Callback<Any> {
             override fun onResponse(call: retrofit2.Call<Any>, response: retrofit2.Response<Any>) {
@@ -72,7 +84,7 @@ object RetrofitClient {
         return markets
     }
 
-    private val retrofitClient: Retrofit.Builder by lazy {
+    /* private val retrofitClient: Retrofit.Builder by lazy {
         Retrofit.Builder()
                 .baseUrl(url)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -82,7 +94,7 @@ object RetrofitClient {
         retrofitClient
                 .build()
                 .create(RetrofitService::class.java)
-    }
+    } */
 
     fun println(data: String) {
         Log.d("Parser", data)

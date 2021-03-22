@@ -9,6 +9,9 @@ interface CoinDao {
     @Query("Select * from coinInfoTable")
     fun getAll(): LiveData<List<CoinInfo>>
 
+    @Query("Select * from coinInfoTable where exchange is :exchange")
+    fun getAllByExchange(exchange: String): LiveData<List<CoinInfo>>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insert(coinInfo: CoinInfo)
 

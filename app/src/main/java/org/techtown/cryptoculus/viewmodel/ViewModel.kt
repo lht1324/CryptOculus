@@ -29,13 +29,19 @@ class ViewModel(application: Application) : ViewModel(){
         coinRepository.getCoinInfos()
         // 이렇게 해 놓으면 액티비티에서 viewModel.coinInfos가 호출될 때마다
         // 자동으로 업데이트 될 수 있다
+        // 이걸 네트워크로 돌리고
+        // DB로 받아오는 건 따로 만들자
+        // DB 사용을 비교할 때 말고는 하지 않을 것 같다
+        // 아니다
+        // 오히려 비교할 때 말고 액티비티에 넣을 일은 없지 않아?
+        // 항상 새 걸 넣어줘야 하잖아
     }
     var restartApp = false
     var exchange = "coinone"
 
     init {
         publishSubject.subscribe { exchange ->
-            this.exchange = exchange
+            coinRepository.exchange = exchange
 
             // 연동을 해버릴까?
             // 다른 rx랑 말이야
