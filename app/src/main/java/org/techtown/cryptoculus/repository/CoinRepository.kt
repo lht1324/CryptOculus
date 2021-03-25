@@ -16,8 +16,8 @@ class CoinRepository(application: Application) {
     // DB에서 가져오든 Network에서 받아오든
     // 결국 coinInfos는 바뀐다
 
-    fun getCoinInfos(): ArrayList<CoinInfo> {
-        return RetrofitClient.getData(exchange) as ArrayList<CoinInfo>
+    fun getCoinInfos(exchange: String): ArrayList<CoinInfo> {
+        return RetrofitClient.getData(exchange)
         // return coinDao.getAll() as MutableLiveData<ArrayList<CoinInfo>> // 오류 가능성 존재
         // 이게 아니라 coinInfos를 해야 하는 것 아닐까
         // rx로 유닛 받는 건 안 되냐?
@@ -25,7 +25,7 @@ class CoinRepository(application: Application) {
         // exchange 넣는 거지
     }
 
-    fun getCoinInfosFromDB(): ArrayList<CoinInfo> {
+    fun getCoinInfosFromDB(exchange: String): ArrayList<CoinInfo> {
         return coinDao.getAllByExchange(exchange) as ArrayList<CoinInfo>
     }
 

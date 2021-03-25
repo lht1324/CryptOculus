@@ -25,51 +25,25 @@ class ViewModel(application: Application) : ViewModel(){
         CoinRepository(application)
     }
 
+
+    var restartApp = false
+    var exchange = "coinone"
     /*
         disposable.add(coinRepository.insert(coinInfo)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { next() })
      */
-    /*
-        disposable.add(coinRepository.getCoinInfos(exchange)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { next() })
-     */
-    var liveCoinInfos = MutableLiveData<ArrayList<CoinInfo>>()
-    private val coinInfos: ArrayList<CoinInfo> by lazy {
-        coinRepository.exchange = this.exchange
-        coinRepository.getCoinInfos()
-        // 이렇게 해 놓으면 액티비티에서 viewModel.coinInfos가 호출될 때마다
-        // 자동으로 업데이트 될 수 있다
-        // 이걸 네트워크로 돌리고
-        // DB로 받아오는 건 따로 만들자
-        // DB 사용을 비교할 때 말고는 하지 않을 것 같다
-        // 아니다
-        // 오히려 비교할 때 말고 액티비티에 넣을 일은 없지 않아?
-        // 항상 새 걸 넣어줘야 하잖아
-    }
+    private var coinInfos = MutableLiveData<ArrayList<CoinInfo>>()
 
-    private val coinInfosFromDB: ArrayList<CoinInfo> by lazy {
-        coinRepository.exchange = this.exchange
-        coinRepository.getCoinInfosFromDB()
-    }
-
-    var restartApp = false
-    var exchange = "coinone"
+    private var coinInfosFromDB = MutableLiveData<ArrayList<CoinInfo>>()
 
     init {
         publishSubject.subscribe { exchange ->
-            this.exchange = exchange
-            // 여기서 coinInfos 새로 초기화하면 되는 거 아냐?
-            // exchange는 새로 들어오잖아
-            // DB에서 받을 때 말곤 swipeRefreshListener랑 menu 말곤 새로 받을 일이 없다
+            coinInfos.value = coinRepository.getCoinInfos(exchange)
+            // DB에서 받을 때 말곤 swipeRefreshLayout이랑 menu에서만 사용한다
         }
     }
-
-    // val coinInfos = ArrayList<CoinInfo>()
-
     class Factory(private val application: Application) : ViewModelProvider.Factory {
         override fun <T : ViewModel?> create(modelClass: Class<T>): T{
             return ViewModel(application) as T
@@ -77,7 +51,8 @@ class ViewModel(application: Application) : ViewModel(){
     }
 
     fun onCreate() {
-
+        coinInfos.value = coinRepository.getCoinInfos("coinone")
+        // exchange 저장하는 거 만들면 바꿔준다. 일단은 직접 지정.
     }
 
     override fun onCleared() {
@@ -90,6 +65,8 @@ class ViewModel(application: Application) : ViewModel(){
 
     @JvmName("getCoinInfosFromDB1")
     fun getCoinInfosFromDB() = coinInfosFromDB
+    // 얘는 관찰할 필요가 없지 않아?
+    // 어차피 첫 실행 때 새로 받아온 데이터랑 비교 한 번 하면 끝나는 건데
 
     fun insert(coinInfo: CoinInfo, next: () -> Unit) {
         disposable.add(coinRepository.insert(coinInfo)

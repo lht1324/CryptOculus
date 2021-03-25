@@ -72,6 +72,12 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    /*
+        disposable.add(coinRepository.insert(coinInfo)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { next() })
+     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.coinone -> {
@@ -112,6 +118,7 @@ class MainActivity : AppCompatActivity() {
                 .getBoolean("restartApp", false)
 
         adapter.coinInfos = viewModel.getCoinInfos().value!!
+
         binding.apply {
             recyclerView.adapter = adapter
             swipeRefreshLayout.setOnRefreshListener {
@@ -119,6 +126,7 @@ class MainActivity : AppCompatActivity() {
                 recyclerView.adapter = adapter
             }
         }
+
         viewModel.getCoinInfos().observe(this, { coinInfos ->
             adapter.coinInfos = coinInfos
             binding.recyclerView.adapter = adapter
@@ -160,10 +168,6 @@ class MainActivity : AppCompatActivity() {
 
         optionDialog.setCancelable(true)
         optionDialog.show()
-    }
-
-    fun updateAdapter() {
-        adapter.coinInfos
     }
 
     private fun println(data: String) {
