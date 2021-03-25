@@ -131,6 +131,9 @@ class MainActivity : AppCompatActivity() {
             adapter.coinInfos = coinInfos
             binding.recyclerView.adapter = adapter
         })
+        // 뷰모델의 coinInfos가 변경되는 조건
+        // 1. 액티비티에서 메뉴가 바뀐다
+        // 2. 일정 시간마다 업데이트되는 기능을 만들 건데 업데이트 될 때도 바뀐다
     }
 
     private fun changeLayout(exchange: String) {
