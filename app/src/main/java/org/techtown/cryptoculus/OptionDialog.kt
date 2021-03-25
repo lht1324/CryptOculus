@@ -25,31 +25,16 @@ class OptionDialog(private val mContext: Context) : Dialog(mContext) {
         binding = DataBindingUtil.inflate(LayoutInflater.from(mContext),
                 R.layout.dialog_option, null, false)
 
-        binding.apply {
-            recyclerView.adapter = optionAdapter
-        }
-
-        /*
-        // Change toDo's 'something(String)' when the enter key is pressed during input in editText
-        // editText에서 입력 중 엔터 키가 입력되면 toDo의 할 일 변경
-        binding.editText.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(p0: Editable?) {
-                toDo.something = p0.toString()
-            }
-            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-
-            }
-            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-
-            }
-        }) */
-
         setContentView(binding.root)
         init()
     }
 
     // Dialog layout setting
     private fun init() {
+        binding.apply {
+            recyclerView.adapter = optionAdapter
+        }
+
         layoutParams = WindowManager.LayoutParams()
         layoutParams.flags = WindowManager.LayoutParams.FLAG_DIM_BEHIND
         layoutParams.dimAmount = 0.5f

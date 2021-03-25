@@ -16,11 +16,10 @@ import org.techtown.cryptoculus.viewmodel.ViewModel
 class MainActivity : AppCompatActivity() {
     // 고칠 것
     // 옵션 액티비티가 아니라 다이얼로그로 띄워보자
-    // 레이아웃을 constraintLayout으로 바꿔보자
-    // MVVM
     // Rx 사용
     // 터치하기 전엔 간단한 정보만 보여주다가 터치하면 상세 정보
     // 터치한 곳에 버튼 넣어서 거래소 차트로 연결해주기
+    // 검색
     
     // coinInfos 변경되는 경우
     // 메뉴 클릭
@@ -100,6 +99,9 @@ class MainActivity : AppCompatActivity() {
         // exchange를 바꿔줬으니까 coinInfos를 불러와야지
         // 어떤 걸로 불러오든 액티비티는 띄우기만 하면 되는 거야
         // 여기서 어댑터 재설정하든가 해라
+        // 뷰모델에 있는 coinInfos가 바뀌면 observe가 감지하고 바꾸는 거잖아?
+        // 그럼 여기서 메뉴가 바뀌면 뷰모델에 있는 coinInfos도 바뀌는 거고
+        // 그걸 감지해서 어댑터 재설정 하는 거지
         return true
     }
 
@@ -113,6 +115,8 @@ class MainActivity : AppCompatActivity() {
         binding.apply {
             recyclerView.adapter = adapter
             swipeRefreshLayout.setOnRefreshListener {
+                adapter.coinInfos = viewModel.getCoinInfos().value!!
+                recyclerView.adapter = adapter
             }
         }
         viewModel.getCoinInfos().observe(this, { coinInfos ->
@@ -146,6 +150,9 @@ class MainActivity : AppCompatActivity() {
     private fun openOptionDialog() {
         val optionDialog = OptionDialog(this)
         optionDialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        viewModel.getCoinInfos().observe(this, { coinInfos ->
+            optionDialog.coinInfos = coinInfos
+        })
 
         optionDialog.setOnDismissListener {
             viewModel.updateAll(optionDialog.optionAdapter.coinInfos) { finish() }
@@ -153,6 +160,10 @@ class MainActivity : AppCompatActivity() {
 
         optionDialog.setCancelable(true)
         optionDialog.show()
+    }
+
+    fun updateAdapter() {
+        adapter.coinInfos
     }
 
     private fun println(data: String) {

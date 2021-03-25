@@ -25,7 +25,21 @@ class ViewModel(application: Application) : ViewModel(){
         CoinRepository(application)
     }
 
-    private val coinInfos: MutableLiveData<ArrayList<CoinInfo>> by lazy {
+    /*
+        disposable.add(coinRepository.insert(coinInfo)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { next() })
+     */
+    /*
+        disposable.add(coinRepository.getCoinInfos(exchange)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { next() })
+     */
+    var liveCoinInfos = MutableLiveData<ArrayList<CoinInfo>>()
+    private val coinInfos: ArrayList<CoinInfo> by lazy {
+        coinRepository.exchange = this.exchange
         coinRepository.getCoinInfos()
         // 이렇게 해 놓으면 액티비티에서 viewModel.coinInfos가 호출될 때마다
         // 자동으로 업데이트 될 수 있다
@@ -36,18 +50,22 @@ class ViewModel(application: Application) : ViewModel(){
         // 오히려 비교할 때 말고 액티비티에 넣을 일은 없지 않아?
         // 항상 새 걸 넣어줘야 하잖아
     }
+
+    private val coinInfosFromDB: ArrayList<CoinInfo> by lazy {
+        coinRepository.exchange = this.exchange
+        coinRepository.getCoinInfosFromDB()
+    }
+
     var restartApp = false
     var exchange = "coinone"
 
     init {
         publishSubject.subscribe { exchange ->
-            coinRepository.exchange = exchange
-
-            // 연동을 해버릴까?
-            // 다른 rx랑 말이야
-            // 여기서 exchange를 그 rx에 onNext로 주고 나서
-            // 통지 들어오면 바꾸는 식으로
-        }.dispose()
+            this.exchange = exchange
+            // 여기서 coinInfos 새로 초기화하면 되는 거 아냐?
+            // exchange는 새로 들어오잖아
+            // DB에서 받을 때 말곤 swipeRefreshListener랑 menu 말곤 새로 받을 일이 없다
+        }
     }
 
     // val coinInfos = ArrayList<CoinInfo>()
@@ -69,11 +87,9 @@ class ViewModel(application: Application) : ViewModel(){
 
     @JvmName("getCoinInfos1") // 구조 상 존재하는 'coinInfos'의 getter와 충돌 방지
     fun getCoinInfos() = coinInfos
-    // 크게 보면 결국 coinInfos를 얻어오는 거긴 한데
-    // DB에서 가져오는 거든 새로 받아오는 거든
-    // 어쨌든 repository에서 받아야 한단 말이지
-    // repository의 coinInfos가 어떤 이유로든 바뀌면 얻어오는 걸로 할까
-    // API를 새로 받거나 거래소가 바뀌거나
+
+    @JvmName("getCoinInfosFromDB1")
+    fun getCoinInfosFromDB() = coinInfosFromDB
 
     fun insert(coinInfo: CoinInfo, next: () -> Unit) {
         disposable.add(coinRepository.insert(coinInfo)

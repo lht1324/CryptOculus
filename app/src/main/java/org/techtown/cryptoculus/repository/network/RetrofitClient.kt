@@ -19,7 +19,7 @@ object RetrofitClient {
     val upbit = "upbit"
     val huobi = "huobi"
 
-    fun getData(exchange: String): MutableLiveData<ArrayList<CoinInfo>> { // 실행 시 parsing까지 마친 ArrayList<CoinInfo>를 출력
+    fun getData(exchange: String): ArrayList<CoinInfo> { // 실행 시 parsing까지 마친 ArrayList<CoinInfo>를 출력
         val url = when(exchange) {
             coinone -> "https://api.coinone.co.kr/"
             bithumb -> "https://api.bithumb.com/"
@@ -57,7 +57,7 @@ object RetrofitClient {
             }
         })
 
-        return MutableLiveData(coinInfos)
+        return coinInfos
     }
 
     private fun getMarketsUpbit(): String {
