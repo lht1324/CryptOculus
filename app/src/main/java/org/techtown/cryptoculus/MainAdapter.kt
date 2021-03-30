@@ -1,17 +1,20 @@
 package org.techtown.cryptoculus
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
-import android.content.res.Resources
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.lifecycle.MutableLiveData
+import android.view.animation.AccelerateInterpolator
+import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView
 import org.techtown.cryptoculus.databinding.ItemCoinBinding
 import org.techtown.cryptoculus.repository.model.CoinInfo
 import java.util.*
 import kotlin.collections.ArrayList
+
 
 class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
     var coinInfos = ArrayList<CoinInfo>()
@@ -30,7 +33,7 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
     override fun getItemCount(): Int = coinInfos.size
 
     inner class ViewHolder(
-            private val binding: ItemCoinBinding,
+        private val binding: ItemCoinBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(coinInfo: CoinInfo) {
@@ -39,15 +42,18 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
 
             binding.imageView.setImageResource(
                 if (binding.root.resources.getIdentifier(
-                                coinInfo.coinName.toLowerCase(Locale.ROOT),
-                                "drawable",
-                                binding.root.context.packageName) == 0) // 0 means 'cannot find'
+                        coinInfo.coinName.toLowerCase(Locale.ROOT),
+                        "drawable",
+                        binding.root.context.packageName
+                    ) == 0
+                ) // 0 means 'cannot find'
                     R.drawable.basic
                 else
                     binding.root.resources.getIdentifier(
-                            coinInfo.coinName.toLowerCase(Locale.ROOT),
-                            "drawable",
-                            binding.root.context.packageName)
+                        coinInfo.coinName.toLowerCase(Locale.ROOT),
+                        "drawable",
+                        binding.root.context.packageName
+                    )
             )
 
             binding.clicked = true
@@ -55,12 +61,16 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
             binding.executePendingBindings()
         }
 
-        fun onClick(clicked: Boolean) {
+        fun onClick(clicked: Boolean, coinInfo: CoinInfo) {
             changeVisibility(clicked)
         }
 
         fun getCoinNameKorean(coinName: String): String {
-            val id = binding.root.resources.getIdentifier(coinName, "string", "org.techtown.cryptoculus")
+            val id = binding.root.resources.getIdentifier(
+                coinName,
+                "string",
+                "org.techtown.cryptoculus"
+            )
 
             return if (id != 0)
                     binding.root.resources.getString(id)
@@ -70,8 +80,12 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
 
         private fun changeVisibility(isExpanded: Boolean) {
             binding.clicked = !(binding.clicked!!)
-            // ValueAnimator.ofInt(int... values)는 View가 변할 값을 지정, 인자는 int 배열
-            val valueAnimator = if (isExpanded) ValueAnimator.ofInt(0, 600) else ValueAnimator.ofInt(600, 0)
+            binding.linearLayout.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            val height = binding.linearLayout.measuredHeight
+            val valueAnimator = if (isExpanded)
+                ValueAnimator.ofInt(0, height)
+            else
+                ValueAnimator.ofInt(height, 0)
             // Animation이 실행되는 시간, n/1000초
             valueAnimator.duration = 500
             valueAnimator.addUpdateListener { animation -> // imageView의 높이 변경
@@ -80,6 +94,12 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
                 // imageView가 실제로 사라지게하는 부분
                 binding.linearLayout.visibility = if (isExpanded) View.VISIBLE else View.GONE
             }
+
+            valueAnimator.addListener(object: AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    binding.linearLayout.layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
+                }
+            })
             // Animation start
             valueAnimator.start()
         }

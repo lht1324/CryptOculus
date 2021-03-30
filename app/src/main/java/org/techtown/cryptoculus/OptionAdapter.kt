@@ -51,9 +51,5 @@ class OptionAdapter : RecyclerView.Adapter<OptionAdapter.ViewHolder>() {
             else
                 "상장 폐지"
         }
-
-        fun showCoinName(coinName: String, coinNameKorean: String): String {
-            return "$coinName / $coinNameKorean"
-        }
     }
 }

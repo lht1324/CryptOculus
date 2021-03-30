@@ -13,11 +13,12 @@
             name="clicked"
             type="Boolean" />
     </data>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:onClick="@{() -> viewHolder.onClick(clicked)}">
+        android:onClick="@{() -> viewHolder.onClick(clicked, coinInfo)}">
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
@@ -26,7 +27,6 @@
             android:layout_marginTop="2dp"
             android:layout_marginRight="4dp"
             android:layout_marginBottom="2dp"
-            app:cardBackgroundColor="#FFFFFFFF"
             app:cardElevation="3dp">
 
             <LinearLayout
@@ -56,7 +56,7 @@
                         <TextView
                             android:id="@+id/textView"
                             android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
                             android:gravity="left"
                             android:maxLines="1"
                             android:text='@{coinInfo.coinName + " / " + viewHolder.getCoinNameKorean(coinInfo.coinName)}'
@@ -65,15 +65,15 @@
                         <TextView
                             android:id="@+id/textView2"
                             android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
                             android:gravity="left"
-                            android:text="@{coinInfo.ticker.lastInTicker}"
+                            android:text='@{coinInfo.ticker.lastInTicker + "원"}'
                             android:textSize="16sp" />
 
                         <TextView
                             android:id="@+id/textView3"
                             android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
                             android:gravity="left"
                             android:text="전일 대비 "
                             android:textSize="16sp" />
@@ -86,56 +86,68 @@
                     android:id="@+id/linearLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
+                    android:orientation="vertical"
                     android:visibility="gone">
-                    <!-- 이 부분 터치하면 차트 연결할지 묻는 다이얼로그 띄우는 걸로-->
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:orientation="horizontal">
+                        <!-- 이 부분 터치하면 차트 연결할지 묻는 다이얼로그 띄우는 걸로-->
 
-                        <TextView
-                            android:id="@+id/textView4"
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text='@{"시가: " + coinInfo.ticker.firstInTicker}' />
+                            android:layout_weight="1"
+                            android:orientation="vertical">
 
-                        <TextView
-                            android:id="@+id/textView5"
+                            <TextView
+                                android:id="@+id/textView4"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text='@{"시가: " + coinInfo.ticker.firstInTicker + "원"}'
+                                android:textSize="18sp" />
+
+                            <TextView
+                                android:id="@+id/textView5"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text='@{"종가: " + coinInfo.ticker.lastInTicker + "원"}'
+                                android:textSize="18sp" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@{String.format(@string/last, coinInfo.ticker.lastInTicker)}" />
+                            android:layout_weight="1"
+                            android:orientation="vertical">
 
-                        <TextView
-                            android:id="@+id/textView8"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@{String.format(@string/volume, coinInfo.ticker.volumeInTicker)}" />
+                            <TextView
+                                android:id="@+id/textView6"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text='@{"고가: " + coinInfo.ticker.highInTicker + "원"}'
+                                android:textSize="18sp" />
+
+                            <TextView
+                                android:id="@+id/textView7"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text='@{"저가: " + coinInfo.ticker.lowInTicker + "원"}'
+                                android:textSize="18sp" />
+
+                        </LinearLayout>
 
                     </LinearLayout>
 
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/textView8"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/textView6"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@{String.format(@string/high, coinInfo.ticker.highInTicker)}" />
-
-                        <TextView
-                            android:id="@+id/textView7"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@{String.format(@string/low, coinInfo.ticker.lowInTicker)}" />
-
-                    </LinearLayout>
-
+                        android:text='@{"거래량: " + coinInfo.ticker.volumeInTicker + " " + coinInfo.coinName}'
+                        android:textSize="18sp" />
                 </LinearLayout>
 
             </LinearLayout>
