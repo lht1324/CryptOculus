@@ -24,9 +24,15 @@ object InitCoinInfos {
                 for (coinInfo in coinInfos) {
                     coinInfo.exchange = exchange
                     coinInfo.coinName = coinInfo.coinNameOriginal.toUpperCase()
-                    coinInfo.coinNameKorean = Resources.getSystem().getString(
+                    /* coinInfo.coinNameKorean = Resources.getSystem().getString(
                             Resources.getSystem().getIdentifier(coinInfo.coinName, "strings", "org.techtown.cryptoculus")
-                    )
+                    ) */
+                    /* coinInfo.coinNameKorean = if (Resources.getSystem().getIdentifier(coinInfo.coinName, "string", "org.techtown.cryptoculus") != 0)
+                        Resources.getSystem().getString(
+                            Resources.getSystem().getIdentifier(coinInfo.coinName, "strings", "org.techtown.cryptoculus")
+                        )
+                    else
+                        "상장 폐지" */
 
                     val ticker = coinInfo.ticker!! as TickerCoinone
                     val formatter =
@@ -50,9 +56,11 @@ object InitCoinInfos {
                 for (coinInfo in coinInfos) {
                     coinInfo.exchange = exchange
                     coinInfo.coinName = coinInfo.coinNameOriginal
-                    coinInfo.coinNameKorean = Resources.getSystem().getString(
+                    /* coinInfo.coinNameKorean = Resources.getSystem().getString(
                             Resources.getSystem().getIdentifier(coinInfo.coinName, "strings", "org.techtown.cryptoculus")
-                    )
+                    )*/
+                    // resourceId == null
+                    // 신규 상장
 
                     val ticker = coinInfo.ticker!! as TickerBithumb
                     val formatter =
@@ -73,9 +81,9 @@ object InitCoinInfos {
                 for (coinInfo in coinInfos) {
                     coinInfo.exchange = exchange
                     coinInfo.coinName = coinInfo.coinNameOriginal.replace("KRW-", "")
-                    coinInfo.coinNameKorean = Resources.getSystem().getString(
+                    /* coinInfo.coinNameKorean = Resources.getSystem().getString(
                             Resources.getSystem().getIdentifier(coinInfo.coinName, "strings", "org.techtown.cryptoculus")
-                    )
+                    ) */
 
                     val ticker = coinInfo.ticker!! as TickerUpbit
                     val formatter =
@@ -96,9 +104,9 @@ object InitCoinInfos {
                 for (coinInfo in coinInfos) {
                     coinInfo.exchange = exchange
                     coinInfo.coinName = coinInfo.coinNameOriginal.replace("krw", "").toUpperCase()
-                    coinInfo.coinNameKorean = Resources.getSystem().getString(
+                    /* coinInfo.coinNameKorean = Resources.getSystem().getString(
                             Resources.getSystem().getIdentifier(coinInfo.coinName, "strings", "org.techtown.cryptoculus")
-                    )
+                    ) */
 
                     val ticker = coinInfo.ticker!! as TickerHuobi
                     val formatter =

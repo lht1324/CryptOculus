@@ -10,8 +10,11 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
 import org.techtown.cryptoculus.databinding.ActivityMainBinding
 import org.techtown.cryptoculus.viewmodel.ViewModel
+
+// CryptOculusMVVM without Database Temporary
 
 class MainActivity : AppCompatActivity() {
     // 고칠 것
@@ -119,10 +122,11 @@ class MainActivity : AppCompatActivity() {
         viewModel.restartApp = getSharedPreferences("restartApp", MODE_PRIVATE)
                 .getBoolean("restartApp", false)
 
-        adapter.coinInfos = viewModel.getCoinInfos().value!!
+        // adapter.coinInfos = viewModel.getCoinInfos().value!! // NPE
 
         binding.apply {
             recyclerView.adapter = adapter
+            recyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
             swipeRefreshLayout.setOnRefreshListener {
                 adapter.coinInfos = viewModel.getCoinInfos().value!!
                 recyclerView.adapter = adapter
@@ -168,7 +172,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         optionDialog.setOnDismissListener {
-            viewModel.updateAll(optionDialog.optionAdapter.coinInfos) { finish() }
+            viewModel.updateCoinInfos(optionDialog.optionAdapter.coinInfos)
         }
 
         optionDialog.setCancelable(true)

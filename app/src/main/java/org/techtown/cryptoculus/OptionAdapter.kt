@@ -3,7 +3,6 @@ package org.techtown.cryptoculus
 import android.content.res.Resources
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import org.techtown.cryptoculus.databinding.ItemOptionBinding
 import org.techtown.cryptoculus.repository.model.CoinInfo
@@ -41,7 +40,20 @@ class OptionAdapter : RecyclerView.Adapter<OptionAdapter.ViewHolder>() {
         fun changeCoinView(coinInfo: CoinInfo, position: Int) {
             coinInfos[position].coinViewCheck = !(coinInfo.coinViewCheck)
             // 이건 자동으로 바뀌게 해야 하는 거 아냐?
-            binding.coinInfo.coinViewCheck = !(binding.coinInfo.coinViewCheck)
+            binding.coinInfo!!.coinViewCheck = !(binding.coinInfo!!.coinViewCheck)
+        }
+
+        fun getCoinNameKorean(coinName: String): String {
+            val id = binding.root.resources.getIdentifier(coinName, "string", "org.techtown.cryptoculus")
+
+            return if (id != 0)
+                binding.root.resources.getString(id)
+            else
+                "상장 폐지"
+        }
+
+        fun showCoinName(coinName: String, coinNameKorean: String): String {
+            return "$coinName / $coinNameKorean"
         }
     }
 }

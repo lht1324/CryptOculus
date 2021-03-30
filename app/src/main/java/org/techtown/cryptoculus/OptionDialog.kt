@@ -3,8 +3,6 @@ package org.techtown.cryptoculus
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.databinding.DataBindingUtil
