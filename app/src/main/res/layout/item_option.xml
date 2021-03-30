@@ -41,15 +41,16 @@
 
                 <CheckedTextView
                     android:id="@+id/checkedTextView"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
                     android:checkMark="?android:attr/listChoiceIndicatorMultiple"
                     android:onClick="@{() -> viewHolder.changeCoinView(coinInfo, position)}"
-                    android:isChecked = "@{coinInfo.coinViewCheck}"
-                    android:text="@{coinInfo.coinName / coinInfo.coinNameKorean}"
+                    android:checked ="@{coinInfo.coinViewCheck}"
+                    android:text='@{coinInfo.coinName + " / " + viewHolder.getCoinNameKorean(coinInfo.coinName)}'
                     android:textSize="20sp" />
+                    <!-- 문자열과 String 변수를 결합하고 싶다면 표현식을 ""가 아니라 ''로 감싸야 한다 -->
 
             </LinearLayout>
 

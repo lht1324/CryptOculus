@@ -31,7 +31,7 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="vertical">
 
                 <LinearLayout
@@ -48,7 +48,7 @@
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:gravity="center_vertical"
                         android:orientation="vertical">
@@ -56,24 +56,24 @@
                         <TextView
                             android:id="@+id/textView"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:gravity="left"
                             android:maxLines="1"
-                            android:text="@{coinInfo.coinName.toUpperCase() / coinInfo.coinNameKorean}"
+                            android:text='@{coinInfo.coinName + " / " + viewHolder.getCoinNameKorean(coinInfo.coinName)}'
                             android:textSize="20sp" />
 
                         <TextView
                             android:id="@+id/textView2"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:gravity="left"
-                            android:text="현재가"
+                            android:text="@{coinInfo.ticker.lastInTicker}"
                             android:textSize="16sp" />
 
                         <TextView
                             android:id="@+id/textView3"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
                             android:gravity="left"
                             android:text="전일 대비 "
                             android:textSize="16sp" />
@@ -83,10 +83,11 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/linearLayout"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:id="@+id/linearLayout">
+                    android:visibility="gone">
                     <!-- 이 부분 터치하면 차트 연결할지 묻는 다이얼로그 띄우는 걸로-->
 
                     <LinearLayout
@@ -99,13 +100,13 @@
                             android:id="@+id/textView4"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@{String.format(@string/first, coinInfo.ticker.firstInTicker)}" />
+                            android:text='@{"시가: " + coinInfo.ticker.firstInTicker}' />
 
                         <TextView
                             android:id="@+id/textView5"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@{String.format(@string/last, coinInfo.ticker.lastInTicker)}"/>
+                            android:text="@{String.format(@string/last, coinInfo.ticker.lastInTicker)}" />
 
                         <TextView
                             android:id="@+id/textView8"
