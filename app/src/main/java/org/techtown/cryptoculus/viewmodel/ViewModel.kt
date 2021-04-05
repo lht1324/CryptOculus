@@ -6,7 +6,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.subjects.PublishSubject
 import org.techtown.cryptoculus.repository.CoinRepository
 import org.techtown.cryptoculus.repository.model.CoinInfo
@@ -15,8 +14,6 @@ class ViewModel(application: Application) : ViewModel(){
     // !restartApp -> insert(), restartApp -> update()
 
     val publishSubject: PublishSubject<String> = PublishSubject.create()
-
-    private val disposable: CompositeDisposable = CompositeDisposable()
     private val coinRepository: CoinRepository by lazy {
         CoinRepository(application)
     }
@@ -37,6 +34,7 @@ class ViewModel(application: Application) : ViewModel(){
     init {
         coinRepository.onCreate()
         publishSubject.subscribe { exchange ->
+            this.exchange = exchange
             coinRepository.getData(exchange)
             // 이걸 실행하면 클라이언트의 라이브데이터가 바뀌면서 뷰모델까지 관찰 결과가 올라와야 한다
             // DB에서 받을 때 말곤 swipeRefreshLayout이랑 menu에서만 사용한다
@@ -53,13 +51,12 @@ class ViewModel(application: Application) : ViewModel(){
         coinRepository.getCoinInfos().observeForever {
             coinInfos.value = it
         }
-        coinRepository.getData("coinone")
+        coinRepository.getData("upbit")
         // exchange 저장하는 거 만들면 바꿔준다. 일단은 직접 지정.
     }
 
     override fun onCleared() {
         super.onCleared()
-        disposable.dispose()
     }
 
     fun updateCoinInfos(coinInfos: ArrayList<CoinInfo>) {

@@ -43,6 +43,12 @@ class MainActivity : AppCompatActivity() {
         init()
     }
 
+    override fun onStart() {
+        super.onStart()
+
+        println("onstart")
+    }
+
     override fun onBackPressed() {
         // Exit if touch once more before 2 secs
         // 2초 전에 누르면 종료
@@ -61,14 +67,24 @@ class MainActivity : AppCompatActivity() {
         // 처음 시작했을 때만 restartApp을 삽입
         // 재시작했을 땐 restartApp을 삽입하지 않는다
         // 처음 시작: true, 재시작: false
-        if (getSharedPreferences("restartApp", MODE_PRIVATE).getBoolean("restartApp", false)) {
+        if (getSharedPreferences("restartApp", MODE_PRIVATE).getBoolean("restartApp", false))
             getSharedPreferences("restartApp", MODE_PRIVATE)
                 .edit()
                 .putBoolean("restartApp", true)
                 .apply()
-        }
+
+        getSharedPreferences("exchange", MODE_PRIVATE)
+                .edit()
+                .putString("exchange", viewModel.exchange)
+                .apply()
 
         // viewModel.coinDao.updateAll(viewModel.coinInfos)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        viewModel.publishSubject
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -121,6 +137,8 @@ class MainActivity : AppCompatActivity() {
         viewModel.onCreate()
         viewModel.restartApp = getSharedPreferences("restartApp", MODE_PRIVATE)
                 .getBoolean("restartApp", false)
+        viewModel.exchange = getSharedPreferences("exchange", MODE_PRIVATE)
+                .getString("exchange", "coinone")!!
 
         // adapter.coinInfos = viewModel.getCoinInfos().value!! // NPE
 

@@ -94,6 +94,8 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
                 // imageView가 실제로 사라지게하는 부분
                 binding.linearLayout.visibility = if (isExpanded) View.VISIBLE else View.GONE
             }
+            // 터치했을 때 바로 사라지는 게 아니라 부드럽게 접히는 걸로 해 볼까?
+            // 방향만 반대로 하면 되는 거 아냐
 
             valueAnimator.addListener(object: AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {

@@ -11,28 +11,16 @@ import java.text.DecimalFormat
 import kotlin.math.roundToInt
 
 object InitCoinInfos {
-    // coinNames 형식 통일하기
-    // coinNamesKorean 가져오기
     // coinone -> "btc": toUpperCase()
     // bithumb -> "BTC"
     // upbit -> "KRW-BTC": "KRW-"를 삭제
     // huobi -> "krwbtc": "krw" 삭제 후 toUpperCase()
-    // coinInfo.coinName.contains("krw", true)
     fun setTicker(exchange: String, coinInfos: ArrayList<CoinInfo>): ArrayList<CoinInfo>? {
         when (exchange) {
             "coinone" -> {
                 for (coinInfo in coinInfos) {
                     coinInfo.exchange = exchange
                     coinInfo.coinName = coinInfo.coinNameOriginal.toUpperCase()
-                    /* coinInfo.coinNameKorean = Resources.getSystem().getString(
-                            Resources.getSystem().getIdentifier(coinInfo.coinName, "strings", "org.techtown.cryptoculus")
-                    ) */
-                    /* coinInfo.coinNameKorean = if (Resources.getSystem().getIdentifier(coinInfo.coinName, "string", "org.techtown.cryptoculus") != 0)
-                        Resources.getSystem().getString(
-                            Resources.getSystem().getIdentifier(coinInfo.coinName, "strings", "org.techtown.cryptoculus")
-                        )
-                    else
-                        "상장 폐지" */
 
                     val ticker = coinInfo.ticker!! as TickerCoinone
                     val formatter =
@@ -46,9 +34,6 @@ object InitCoinInfos {
                     coinInfo.ticker!!.highInTicker = formatter.format(ticker.high.toDouble())
                     coinInfo.ticker!!.lowInTicker = formatter.format(ticker.low.toDouble())
                     coinInfo.ticker!!.volumeInTicker = formatter.format(ticker.volume.toDouble())
-                    // coinInfo.ticker.tradeValueInTicker = formatter.format(ticker.)
-                    // 그냥 거래량 같은 걸 추가하는 게 낫지 않아?
-
                 }
             }
 
@@ -56,11 +41,6 @@ object InitCoinInfos {
                 for (coinInfo in coinInfos) {
                     coinInfo.exchange = exchange
                     coinInfo.coinName = coinInfo.coinNameOriginal
-                    /* coinInfo.coinNameKorean = Resources.getSystem().getString(
-                            Resources.getSystem().getIdentifier(coinInfo.coinName, "strings", "org.techtown.cryptoculus")
-                    )*/
-                    // resourceId == null
-                    // 신규 상장
 
                     val ticker = coinInfo.ticker!! as TickerBithumb
                     val formatter =
@@ -81,9 +61,6 @@ object InitCoinInfos {
                 for (coinInfo in coinInfos) {
                     coinInfo.exchange = exchange
                     coinInfo.coinName = coinInfo.coinNameOriginal.replace("KRW-", "")
-                    /* coinInfo.coinNameKorean = Resources.getSystem().getString(
-                            Resources.getSystem().getIdentifier(coinInfo.coinName, "strings", "org.techtown.cryptoculus")
-                    ) */
 
                     val ticker = coinInfo.ticker!! as TickerUpbit
                     val formatter =
@@ -104,9 +81,6 @@ object InitCoinInfos {
                 for (coinInfo in coinInfos) {
                     coinInfo.exchange = exchange
                     coinInfo.coinName = coinInfo.coinNameOriginal.replace("krw", "").toUpperCase()
-                    /* coinInfo.coinNameKorean = Resources.getSystem().getString(
-                            Resources.getSystem().getIdentifier(coinInfo.coinName, "strings", "org.techtown.cryptoculus")
-                    ) */
 
                     val ticker = coinInfo.ticker!! as TickerHuobi
                     val formatter =

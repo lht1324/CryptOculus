@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import org.json.JSONArray
 import org.json.JSONObject
@@ -14,24 +15,22 @@ import org.techtown.cryptoculus.ticker.TickerHuobi
 import org.techtown.cryptoculus.ticker.TickerUpbit
 import org.techtown.cryptoculus.viewmodel.InitCoinInfos
 
-class DataParser {
+class DataParser() {
     val disposable: CompositeDisposable = CompositeDisposable()
-
-    // Unit 넣어주는 걸로 대신하면 안 되나?
-    // disposable 같은 걸로 Unit 넣은 다음에
-    // coinInfos를 processData에 통지 받은 exchange랑 response 넣어주는 걸로 대신하는 거지
+    
+    // 업비트만 따로 markets까지 넣어줘야 하는 거잖아
+    // 일단 분리하거나 처리 가능한 방법을 알아보자
 
     fun getParsedData(exchange: String, response: String): ArrayList<CoinInfo> {
         return when (exchange) {
             "coinone" -> parseCoinone(exchange, response)
             "bithumb" -> parseBithumb(exchange, response)
-            "upbit" -> parseUpbitTickers(exchange, response)
-            else -> parseHuobi(exchange, response)
+            "huobi" -> parseHuobi(exchange, response)
+            else -> parseUpbitTickers(exchange, response)
         }
     }
 
     private fun parseCoinone(exchange: String, response: String): ArrayList<CoinInfo> {
-        // response 정상
         val gson = Gson()
         val jsonObject = JSONObject(response)
         val coinNames = jsonObject.keys().asSequence().toList() as ArrayList<String>
@@ -45,35 +44,32 @@ class DataParser {
             coinInfo.ticker = gson.fromJson(jsonObject.get(coinNames[i]).toString(), TickerCoinone::class.java)
             coinInfo.coinNameOriginal = coinNames[i]
             coinInfos.add(coinInfo)
-            // tickersCoinone.add(gson.fromJson(jsonObject.get(coinNames[i]).toString(), TickerCoinone::class.java))
         }
 
-        coinInfos = InitCoinInfos.setTicker(exchange, coinInfos)!!
-        return coinInfos
+        return InitCoinInfos.setTicker(exchange, coinInfos)!!
     }
 
     private fun parseBithumb(exchange: String, response: String): ArrayList<CoinInfo> {
         val gson = Gson()
-        val jsonObject = JSONObject(response)
-        val data = jsonObject.getJSONObject("data")
+        // "TRUE ="를 Boolean으로 인식한다...
+        val data = JSONObject(response.replace("TRUE", "TRUETEMP")).getJSONObject("data")
         val coinNames = data.keys().asSequence().toList() as ArrayList<String>
-        val coinInfos = ArrayList<CoinInfo>()
+        var coinInfos = ArrayList<CoinInfo>()
 
-        coinNames.removeAt(0)
         coinNames.removeAt(coinNames.size - 1)
 
         for (i in coinNames.indices) {
             val coinInfo = CoinInfo()
             coinInfo.ticker = gson.fromJson(data.get(coinNames[i]).toString(), TickerBithumb::class.java)
-            coinInfo.coinNameOriginal = coinNames[i]
+            coinInfo.coinNameOriginal = if (coinNames[i] != "TRUETEMP") coinNames[i] else "TRUE"
             coinInfos.add(coinInfo)
-            // tickersBithumb.add(gson.fromJson(data.get(coinNames[i]).toString(), TickerBithumb::class.java))
         }
 
-        return coinInfos
+        return InitCoinInfos.setTicker(exchange, coinInfos)!!
     }
 
     fun parseUpbitMarkets(response: String): String {
+        println("parseUpbitMarkets is executed.")
         val jsonArray = JSONArray(response)
         var markets = ""
 
@@ -90,6 +86,7 @@ class DataParser {
 
     private fun parseUpbitTickers(markets: String, response: String): ArrayList<CoinInfo> {
         val gson = Gson()
+        println("markets in parseUpbitTickers = $markets")
         val jsonArray = JSONArray(response)
 
         val coinNames = markets.split(",") as ArrayList<String>
@@ -101,10 +98,9 @@ class DataParser {
 
             coinInfo.ticker = gson.fromJson(jsonArray[i].toString(), TickerUpbit::class.java)
             coinInfos.add(coinInfo)
-            // tickersUpbit.add(gson.fromJson(jsonArray[i].toString(), TickerUpbit::class.java))
         }
 
-        return coinInfos
+        return InitCoinInfos.setTicker("upbit", coinInfos)!!
     }
 
     private fun parseHuobi(exchange: String, response: String): ArrayList<CoinInfo> {
@@ -114,7 +110,7 @@ class DataParser {
 
         val coinInfos = ArrayList<CoinInfo>()
 
-        for (i in 0..data.length()) {
+        for (i in 0 until (data.length() - 1)) {
             if (data.getJSONObject(i).toString().contains("krw")) {
                 val coinInfo = CoinInfo()
                 coinInfo.coinNameOriginal = data.getJSONObject(i).getString("symbol")
@@ -124,7 +120,7 @@ class DataParser {
             }
         }
 
-        return coinInfos
+        return InitCoinInfos.setTicker(exchange, coinInfos)!!
     }
 
     private fun println(data: String) {
