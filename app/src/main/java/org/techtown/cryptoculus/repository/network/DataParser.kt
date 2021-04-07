@@ -66,15 +66,20 @@ class DataParser() {
         // "key" : "value"
         // 이 형태일 때 value에 공백이 포함되어 있다면 공백 다음의 2번째 글자에서 Unterminated 에러가 발생한다
 
-        val jsonArray = JSONArray(response.replace("=", ":"))
-        val tempList = ArrayList<JSONObject>()
-        for (i in 0 until jsonArray.length() - 1)
-            tempList.add(jsonArray.get(i) as JSONObject)
-        for (i in tempList.indices)
-            println("tempList[$i]'s market = ${tempList[i].getString("market")}")
+        println("response = $response")
+
+        var responseTemp = response.replace("}, {", "},{")
+                .replace("{", "{\"") // { 오른쪽
+                .replace("=", "\"=\"") // = 왼쪽 오른쪽
+                .replace(", ", "\", \"") // ", " 왼쪽 오른쪽 (이 경우엔 }와 { 사이에 ", "가 있다면 제외)
+                .replace("}", "\"}") // } 왼쪽
+                .replace("},{", "}, {")
+        println("responseTemp = $responseTemp")
+
+        val jsonArray = JSONArray(responseTemp)
         var markets = ""
 
-        for (i in 0..jsonArray.length()) {
+        for (i in 0 until jsonArray.length()) {
             if (jsonArray.getJSONObject(i).getString("market").contains("KRW")) {
                 markets +=
                         if (i != jsonArray.length() - 1)
@@ -90,13 +95,12 @@ class DataParser() {
 
     private fun parseUpbitTickers(markets: String, response: String): ArrayList<CoinInfo> {
         val gson = Gson()
-        println("markets in parseUpbitTickers = $markets")
         val jsonArray = JSONArray(response)
 
         val coinNames = markets.split(",") as ArrayList<String>
         val coinInfos = ArrayList<CoinInfo>()
 
-        for (i in 0..jsonArray.length()) {
+        for (i in 0 until jsonArray.length()) {
             val coinInfo = CoinInfo()
             coinInfo.coinNameOriginal = coinNames[i]
 
