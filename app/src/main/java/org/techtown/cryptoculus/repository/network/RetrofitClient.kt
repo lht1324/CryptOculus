@@ -3,24 +3,19 @@ package org.techtown.cryptoculus.repository.network
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.core.Single
-import io.reactivex.rxjava3.core.SingleObserver
+import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
-import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
-import io.reactivex.rxjava3.subjects.PublishSubject
 import org.techtown.cryptoculus.repository.model.CoinInfo
 import retrofit2.Retrofit
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    interface MarketsCallback {
-        fun onSuccess(marketsTemp: String)
-    }
-
     // 일단 확실한 건 비동기 처리 때문에 getMarketsUpbit()가 getData()가 끝난 뒤에 실행된다는 거야
     // call에서 2번 실행해볼까?
-    //
+    // 업비트를 완전히 분리하는 건 어때?
+    // markets의 onSuccess에서 getTickerUpbit()를 실행하는 거야
     val coinone = "coinone"
     val bithumb = "bithumb"
     val upbit = "upbit"
@@ -31,38 +26,52 @@ object RetrofitClient {
     var markets = ""
 
     fun getData(exchange: String) { // 실행 시 parsing까지 마친 ArrayList<CoinInfo>를 출력
-        // var markets = "Basic"
+        markets = ""
         val url = when(exchange) {
             coinone -> "https://api.coinone.co.kr/"
             bithumb -> "https://api.bithumb.com/"
-            upbit -> {
-                val publishSubject: PublishSubject<String> = PublishSubject.create()
-                publishSubject
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe {
-                            markets = it
-                        }
-                getMarketsUpbit(publishSubject)
-                println("markets in getData() = $markets")
-                // getResponse("https://api.upbit.com/v1/", "markets")
-                "https://api.upbit.com/v1/"
-            }
+            upbit -> "https://api.upbit.com/v1/"
             else -> "https://api-cloud.huobi.co.kr/"
         }
 
-        println("markets in getData() = $markets")
+        /* if (exchange == "upbit") {
+            getMarketsUpbit(url)
+                    .getMarketsUpbit()
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .flatMap { marketsTemp -> Observable.fromIterable(marketsTemp)
+                                .filter {
+                                    it.market.contains("KRW")
+                                }.toList().toObservable()
+                    }
+                    .subscribe { marketsTemp ->
+                        for (i in marketsTemp.indices) {
+                            println("market[$i] = ${marketsTemp[i].market}")
+                            markets += if (i != marketsTemp.size - 1)
+                                "${marketsTemp[i]},"
+                            else
+                                marketsTemp[i]
+                        }
+                        println("markets = $markets")
+                    }
+        } */
+
         getResponse(url, exchange)
     }
 
     private fun getResponse(url: String, exchange: String) {
         val parser = DataParser()
+        var markets = ""
 
         val builder = Retrofit.Builder()
             .baseUrl(url)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(RetrofitService::class.java)
+
+        if (exchange == "upbit")
+            markets = parser.parseUpbitMarkets(builder.getMarketsUpbit().execute().body().toString())
+        println("markets = $markets")
 
         val call: retrofit2.Call<Any> =
             when (exchange) {
@@ -72,23 +81,17 @@ object RetrofitClient {
                     builder.getTickersBithumb()
                 upbit ->
                     builder.getTickersUpbit(markets)
-                huobi ->
-                    builder.getTickersHuobi()
                 else ->
-                    builder.getMarketsUpbit()
+                    builder.getTickersHuobi()
             }
 
         call.enqueue(object : retrofit2.Callback<Any> {
             override fun onResponse(call: retrofit2.Call<Any>, response: retrofit2.Response<Any>) {
-                if (exchange == "markets") {
-                    setMarkets(parser.parseUpbitMarkets(response.body().toString()))
-                } else {
-                    coinInfos.value = parser.getParsedData(
+                coinInfos.value = parser.getParsedData(
                             if (exchange != "upbit") exchange
                             else markets,
                             response.body().toString()
                     )
-                }
             }
 
             override fun onFailure(call: retrofit2.Call<Any>, t: Throwable) {
@@ -97,7 +100,14 @@ object RetrofitClient {
         })
     }
 
-    private fun getMarketsUpbit(publishSubject: PublishSubject<String>) {
+    /* private fun getMarketsUpbit(url: String): RetrofitService = Retrofit.Builder()
+            .baseUrl(url)
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(RetrofitService::class.java) */
+
+    /* private fun getMarketsUpbit() {
         val parser = DataParser()
         var markets = ""
 
@@ -118,17 +128,12 @@ object RetrofitClient {
                 println("Retrofit process is failed.")
             }
         })
-    }
-
-    @JvmName("setMarkets1")
-    private fun setMarkets(markets: String) {
-        this.markets = markets
-    }
+    } */
 
     @JvmName("getCoinInfos1")
     fun getCoinInfos() = coinInfos
 
-    fun println(data: String) {
+    private fun println(data: String) {
         Log.d("Parser", data)
     }
 }

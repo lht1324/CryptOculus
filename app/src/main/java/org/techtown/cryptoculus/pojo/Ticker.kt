@@ -1,4 +1,4 @@
-package org.techtown.cryptoculus.ticker
+package org.techtown.cryptoculus.pojo
 
 open class Ticker {
     var firstInTicker = ""

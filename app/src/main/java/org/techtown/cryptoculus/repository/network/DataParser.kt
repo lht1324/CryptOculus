@@ -1,18 +1,12 @@
 package org.techtown.cryptoculus.repository.network
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
-import com.google.gson.JsonObject
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import org.json.JSONArray
 import org.json.JSONObject
+import org.techtown.cryptoculus.pojo.*
 import org.techtown.cryptoculus.repository.model.CoinInfo
-import org.techtown.cryptoculus.ticker.TickerBithumb
-import org.techtown.cryptoculus.ticker.TickerCoinone
-import org.techtown.cryptoculus.ticker.TickerHuobi
-import org.techtown.cryptoculus.ticker.TickerUpbit
 import org.techtown.cryptoculus.viewmodel.InitCoinInfos
 
 class DataParser() {
@@ -69,17 +63,27 @@ class DataParser() {
     }
 
     fun parseUpbitMarkets(response: String): String {
-        println("parseUpbitMarkets is executed.")
-        val jsonArray = JSONArray(response)
+        // "key" : "value"
+        // 이 형태일 때 value에 공백이 포함되어 있다면 공백 다음의 2번째 글자에서 Unterminated 에러가 발생한다
+
+        val jsonArray = JSONArray(response.replace("=", ":"))
+        val tempList = ArrayList<JSONObject>()
+        for (i in 0 until jsonArray.length() - 1)
+            tempList.add(jsonArray.get(i) as JSONObject)
+        for (i in tempList.indices)
+            println("tempList[$i]'s market = ${tempList[i].getString("market")}")
         var markets = ""
 
         for (i in 0..jsonArray.length()) {
-            if (jsonArray.getJSONObject(i).toString().contains("KRW")) {
+            if (jsonArray.getJSONObject(i).getString("market").contains("KRW")) {
                 markets +=
-                        if (i != jsonArray.length() - 1) "${jsonArray.getJSONObject(i).getString("market")},"
-                        else jsonArray.getJSONObject(i).getString("market")
+                        if (i != jsonArray.length() - 1)
+                            "${jsonArray.getJSONObject(i).getString("market")},"
+                        else
+                            jsonArray.getJSONObject(i).getString("market")
             }
         }
+        println("markets = $markets")
 
         return markets
     }

@@ -1,12 +1,11 @@
 package org.techtown.cryptoculus.viewmodel
 
-import android.content.res.Resources
 import android.util.Log
 import org.techtown.cryptoculus.repository.model.CoinInfo
-import org.techtown.cryptoculus.ticker.TickerBithumb
-import org.techtown.cryptoculus.ticker.TickerCoinone
-import org.techtown.cryptoculus.ticker.TickerHuobi
-import org.techtown.cryptoculus.ticker.TickerUpbit
+import org.techtown.cryptoculus.pojo.TickerBithumb
+import org.techtown.cryptoculus.pojo.TickerCoinone
+import org.techtown.cryptoculus.pojo.TickerHuobi
+import org.techtown.cryptoculus.pojo.TickerUpbit
 import java.text.DecimalFormat
 import kotlin.math.roundToInt
 

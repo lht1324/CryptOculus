@@ -1,4 +1,4 @@
-package org.techtown.cryptoculus.ticker
+package org.techtown.cryptoculus.pojo
 
 
 import com.google.gson.annotations.SerializedName
@@ -18,8 +18,6 @@ data class TickerCoinone(
     val low: String,
     @SerializedName("result")
     val result: String,
-    @SerializedName("timestamp")
-    val timestamp: String,
     @SerializedName("volume")
     val volume: String,
     @SerializedName("yesterday_first")

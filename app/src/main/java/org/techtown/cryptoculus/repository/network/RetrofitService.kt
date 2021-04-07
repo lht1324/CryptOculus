@@ -1,6 +1,5 @@
 package org.techtown.cryptoculus.repository.network
 
-import io.reactivex.rxjava3.core.Single
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -18,7 +17,7 @@ interface RetrofitService {
     // https://api.upbit.com/v1/market/all (Markets)
     // https://api.upbit.com/v1/ticker?markets=... (Ticker)
     @GET("market/all")
-    fun getMarketsUpbit(): Single<String>
+    fun getMarketsUpbit(): Call<Any>
     // fun getMarketsUpbit(): Call<Any>
     @GET("ticker?")
     fun getTickersUpbit(@Query("markets") markets: String?): Call<Any>

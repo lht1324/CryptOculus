@@ -1,6 +1,6 @@
 package org.techtown.cryptoculus.repository.model
 
-import org.techtown.cryptoculus.ticker.Ticker
+import org.techtown.cryptoculus.pojo.Ticker
 
 class CoinInfo {
     var exchange = "" // 거래소
