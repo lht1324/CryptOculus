@@ -1,28 +1,32 @@
 package org.techtown.cryptoculus.repository.network
 
+import io.reactivex.Single
+import org.json.JSONObject
+import org.techtown.cryptoculus.pojo.*
 import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface RetrofitService {
     // https://api.coinone.co.kr/ticker/?currency=all
     @GET("ticker?")
-    fun getTickersCoinone(@Query("currency") currency: String?): Call<Any>
+    fun getCoinone(@Query("currency") currency: String?): Single<Response<Any>>
 
     // https://api.bithumb.com/public/ticker/ALL_KRW
     @GET("public/ticker/ALL_KRW")
-    fun getTickersBithumb(): Call<Any>
+    fun getBithumb(): Single<Response<Any>>
 
     // https://api.upbit.com/v1/
     // https://api.upbit.com/v1/market/all (Markets)
     // https://api.upbit.com/v1/ticker?markets=... (Ticker)
     @GET("market/all")
-    fun getMarketsUpbit(): Call<Any>
+    fun getMarketsUpbit(): Call<ArrayList<UpbitMarket>>
     // fun getMarketsUpbit(): Call<Any>
     @GET("ticker?")
-    fun getTickersUpbit(@Query("markets") markets: String?): Call<Any>
+    fun getUpbit(@Query("markets") markets: String?): Single<Response<ArrayList<TickerUpbit>>>
 
     // https://api-cloud.huobi.co.kr/market/tickers
     @GET("market/tickers")
-    fun getTickersHuobi(): Call<Any>
+    fun getHuobi(): Single<Response<Huobi>>
 }

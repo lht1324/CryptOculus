@@ -9,10 +9,13 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import org.techtown.cryptoculus.databinding.ActivityMainBinding
+import org.techtown.cryptoculus.repository.model.CoinInfo
 import org.techtown.cryptoculus.viewmodel.ViewModel
 
 // CryptOculusMVVM without Database Temporary
@@ -32,12 +35,16 @@ class MainActivity : AppCompatActivity() {
     // swipeRefreshLayout 작동
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: ViewModel
-    private val adapter = MainAdapter()
+    private val mainAdapter by lazy {
+        MainAdapter()
+    }
     private var backPressedLast: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
 
         if (android.os.Build.VERSION.SDK_INT > 9) {
             StrictMode.setThreadPolicy(StrictMode
@@ -76,7 +83,7 @@ class MainActivity : AppCompatActivity() {
         // 처음 시작했을 때만 restartApp을 삽입
         // 재시작했을 땐 restartApp을 삽입하지 않는다
         // 처음 시작: true, 재시작: false
-        if (getSharedPreferences("restartApp", MODE_PRIVATE).getBoolean("restartApp", false))
+        if (!getSharedPreferences("restartApp", MODE_PRIVATE).getBoolean("restartApp", false))
             getSharedPreferences("restartApp", MODE_PRIVATE)
                 .edit()
                 .putBoolean("restartApp", true)
@@ -84,16 +91,8 @@ class MainActivity : AppCompatActivity() {
 
         getSharedPreferences("exchange", MODE_PRIVATE)
                 .edit()
-                .putString("exchange", viewModel.exchange)
+                .putString("exchange", viewModel.getExchange())
                 .apply()
-
-        // viewModel.coinDao.updateAll(viewModel.coinInfos)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
-        viewModel.publishSubject
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -102,67 +101,48 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    /*
-        disposable.add(coinRepository.insert(coinInfo)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { next() })
-     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.coinone -> {
-                viewModel.publishSubject.onNext("coinone")
-                viewModel.publishSubject.onComplete()
-                changeLayout("coinone")
-            }
-            R.id.bithumb -> {
-                viewModel.publishSubject.onNext("bithumb")
-                viewModel.publishSubject.onComplete()
-                changeLayout("bithumb")
-            }
-            R.id.upbit -> {
-                viewModel.publishSubject.onNext("upbit")
-                viewModel.publishSubject.onComplete()
-                changeLayout("upbit")
-            }
-            R.id.huobi -> {
-                viewModel.publishSubject.onNext("huobi")
-                viewModel.publishSubject.onComplete()
-                changeLayout("huobi")
-            }
-            else -> openOptionDialog()
+            R.id.coinone ->
+                viewModel.getDataCoinone()
+
+            R.id.bithumb ->
+                viewModel.getDataBithumb()
+
+            R.id.upbit ->
+                viewModel.getDataUpbit()
+
+            R.id.huobi ->
+                viewModel.getDataHuobi()
+
+            else -> openOptionDialog(mainAdapter.coinInfos)
         }
-        // exchange를 바꿔줬으니까 coinInfos를 불러와야지
-        // 어떤 걸로 불러오든 액티비티는 띄우기만 하면 되는 거야
-        // 여기서 어댑터 재설정하든가 해라
-        // 뷰모델에 있는 coinInfos가 바뀌면 observe가 감지하고 바꾸는 거잖아?
-        // 그럼 여기서 메뉴가 바뀌면 뷰모델에 있는 coinInfos도 바뀌는 거고
-        // 그걸 감지해서 어댑터 재설정 하는 거지
+
         return true
     }
 
     private fun init() {
-        viewModel = ViewModelProvider(this, ViewModel.Factory(application)).get(ViewModel::class.java)
-        viewModel.onCreate()
-        viewModel.restartApp = getSharedPreferences("restartApp", MODE_PRIVATE)
-                .getBoolean("restartApp", false)
-        viewModel.exchange = getSharedPreferences("exchange", MODE_PRIVATE)
-                .getString("exchange", "coinone")!!
-
-        // adapter.coinInfos = viewModel.getCoinInfos().value!! // NPE
+        viewModel = ViewModelProvider(this, ViewModel.Factory(
+                getSharedPreferences("exchange", MODE_PRIVATE)
+                        .getString("exchange", "coinone")!!,
+                getSharedPreferences("restartApp", MODE_PRIVATE)
+                        .getBoolean("restartApp", false)
+        )).get(ViewModel::class.java)
 
         binding.apply {
-            recyclerView.adapter = adapter
+            recyclerView.adapter = mainAdapter
             recyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
+
             swipeRefreshLayout.setOnRefreshListener {
-                adapter.coinInfos = viewModel.getCoinInfos().value!!
-                recyclerView.adapter = adapter
+                viewModel.refreshCoinInfos()
+                swipeRefreshLayout.isRefreshing = false
             }
         }
 
         viewModel.getCoinInfos().observe(this, { coinInfos ->
-            adapter.coinInfos = coinInfos
-            binding.recyclerView.adapter = adapter
+            changeLayout(coinInfos[0].exchange)
+            mainAdapter.coinInfos = coinInfos
+            mainAdapter.notifyDataSetChanged()
         })
         // 뷰모델의 coinInfos가 변경되는 조건
         // 1. 액티비티에서 메뉴가 바뀐다
@@ -187,20 +167,18 @@ class MainActivity : AppCompatActivity() {
                 supportActionBar!!.setBackgroundDrawable(ColorDrawable(0xFF1C2143.toInt()))
                 supportActionBar!!.title = "Huobi"
             }
-            else -> TODO()
         }
     }
 
-    private fun openOptionDialog() {
+    private fun openOptionDialog(coinInfos: ArrayList<CoinInfo>) {
         val optionDialog = OptionDialog(this)
+        optionDialog.optionAdapter.coinInfos = coinInfos
         optionDialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        viewModel.getCoinInfos().observe(this, { coinInfos ->
-            optionDialog.coinInfos = coinInfos
-        })
 
         optionDialog.setOnDismissListener {
             viewModel.updateCoinInfos(optionDialog.optionAdapter.coinInfos)
         }
+        // 여기서 DB 추가해야 하나?
 
         optionDialog.setCancelable(true)
         optionDialog.show()

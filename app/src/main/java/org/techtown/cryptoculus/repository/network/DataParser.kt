@@ -7,7 +7,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.techtown.cryptoculus.pojo.*
 import org.techtown.cryptoculus.repository.model.CoinInfo
-import org.techtown.cryptoculus.viewmodel.InitCoinInfos
+import org.techtown.cryptoculus.viewmodel.CoinInfosMaker
 
 class DataParser() {
     val disposable: CompositeDisposable = CompositeDisposable()
@@ -40,7 +40,7 @@ class DataParser() {
             coinInfos.add(coinInfo)
         }
 
-        return InitCoinInfos.setTicker(exchange, coinInfos)!!
+        return CoinInfosMaker.maker(exchange, coinInfos)!!
     }
 
     private fun parseBithumb(exchange: String, response: String): ArrayList<CoinInfo> {
@@ -59,7 +59,7 @@ class DataParser() {
             coinInfos.add(coinInfo)
         }
 
-        return InitCoinInfos.setTicker(exchange, coinInfos)!!
+        return CoinInfosMaker.maker(exchange, coinInfos)!!
     }
 
     fun parseUpbitMarkets(response: String): String {
@@ -108,7 +108,7 @@ class DataParser() {
             coinInfos.add(coinInfo)
         }
 
-        return InitCoinInfos.setTicker("upbit", coinInfos)!!
+        return CoinInfosMaker.maker("upbit", coinInfos)!!
     }
 
     private fun parseHuobi(exchange: String, response: String): ArrayList<CoinInfo> {
@@ -128,7 +128,7 @@ class DataParser() {
             }
         }
 
-        return InitCoinInfos.setTicker(exchange, coinInfos)!!
+        return CoinInfosMaker.maker(exchange, coinInfos)!!
     }
 
     private fun println(data: String) {

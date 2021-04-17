@@ -11,11 +11,12 @@ import org.techtown.cryptoculus.repository.model.CoinInfo
 import java.util.*
 
 class OptionDialog(private val mContext: Context) : Dialog(mContext) {
-
     private lateinit var binding: DialogOptionBinding
     private lateinit var optionDialog: OptionDialog
-    val optionAdapter = OptionAdapter()
     private lateinit var layoutParams: WindowManager.LayoutParams
+    val optionAdapter: OptionAdapter by lazy {
+        OptionAdapter()
+    }
     lateinit var coinInfos: ArrayList<CoinInfo>
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,9 +30,8 @@ class OptionDialog(private val mContext: Context) : Dialog(mContext) {
 
     // Dialog layout setting
     private fun init() {
-        binding.apply {
-            recyclerView.adapter = optionAdapter
-        }
+        optionAdapter.coinInfos = coinInfos
+        binding.recyclerView.adapter = optionAdapter
 
         layoutParams = WindowManager.LayoutParams()
         layoutParams.flags = WindowManager.LayoutParams.FLAG_DIM_BEHIND
@@ -40,5 +40,9 @@ class OptionDialog(private val mContext: Context) : Dialog(mContext) {
         layoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT
         window!!.attributes = layoutParams
         optionDialog = this
+    }
+
+    private fun setList(coinInfos: ArrayList<CoinInfo>) {
+        optionAdapter.coinInfos = coinInfos
     }
 }
