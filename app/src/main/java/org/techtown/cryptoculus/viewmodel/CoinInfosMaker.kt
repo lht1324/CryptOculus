@@ -26,7 +26,7 @@ object CoinInfosMaker {
             "coinone" -> {
                 val gson = Gson()
                 val jsonObject = JSONObject(response.toString())
-                val coinNameOriginals = jsonObject.keys().asSequence().toList() as ArrayList<String>
+                val coinNameOriginals = ArrayList<String>(jsonObject.keys().asSequence().toList())
 
                 for (i in 0..2)
                     coinNameOriginals.removeAt(0)
@@ -60,7 +60,7 @@ object CoinInfosMaker {
             "bithumb" -> {
                 val gson = Gson()
                 val jsonObject = JSONObject(response.toString().replace("TRUE", "TRUETEMP")).getJSONObject("data")
-                val coinNameOriginals = jsonObject.keys().asSequence().toList() as ArrayList<String>
+                val coinNameOriginals = ArrayList<String>(jsonObject.keys().asSequence().toList())
 
                 coinNameOriginals.removeAt(coinNameOriginals.size - 1)
 
@@ -82,7 +82,7 @@ object CoinInfosMaker {
                             lastInTicker = formatterPrice.format(tickerTemp.closingPrice.toDouble())
                             highInTicker = formatterPrice.format(tickerTemp.maxPrice.toDouble())
                             lowInTicker = formatterPrice.format(tickerTemp.minPrice.toDouble())
-                            volumeInTicker = formatterPrice.format(tickerTemp.unitsTraded.toDouble())
+                            volumeInTicker = formatterVolume.format(tickerTemp.unitsTraded.toDouble())
                         }
 
                         if (coinNameOriginals[i] == "TRUETEMP") {

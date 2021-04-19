@@ -6,25 +6,28 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.databinding.DataBindingUtil
+import org.techtown.cryptoculus.databinding.DialogNoticeBinding
 import org.techtown.cryptoculus.databinding.DialogOptionBinding
 import org.techtown.cryptoculus.repository.model.CoinInfo
 import java.util.*
 
-class OptionDialog(private val mContext: Context) : Dialog(mContext) {
-    private lateinit var binding: DialogOptionBinding
-    private lateinit var optionDialog: OptionDialog
+class NoticeDialog(private val mContext: Context) : Dialog(mContext) {
+    private lateinit var binding: DialogNoticeBinding
     private val layoutParams: WindowManager.LayoutParams by lazy {
         WindowManager.LayoutParams()
     }
-    val optionAdapter: OptionAdapter by lazy {
-        OptionAdapter()
+    private val noticeAdapterNewListed: NoticeAdapter by lazy {
+        NoticeAdapter()
     }
-    lateinit var coinInfos: ArrayList<CoinInfo>
+    private val noticeAdapterDeListed: NoticeAdapter by lazy {
+        NoticeAdapter()
+    }
+    lateinit var notices: ArrayList<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.inflate(LayoutInflater.from(mContext),
-                R.layout.dialog_option, null, false)
+                R.layout.dialog_notice, null, false)
 
         setContentView(binding.root)
         init()
@@ -32,8 +35,8 @@ class OptionDialog(private val mContext: Context) : Dialog(mContext) {
 
     // Dialog layout setting
     private fun init() {
-        optionAdapter.coinInfos = coinInfos
-        binding.recyclerView.adapter = optionAdapter
+        noticeAdapter.notices = notices
+        binding.recyclerView.adapter = noticeAdapter
 
         layoutParams.apply {
             flags = WindowManager.LayoutParams.FLAG_DIM_BEHIND
@@ -43,10 +46,5 @@ class OptionDialog(private val mContext: Context) : Dialog(mContext) {
         }
 
         window!!.attributes = layoutParams
-        optionDialog = this
-    }
-
-    private fun setList(coinInfos: ArrayList<CoinInfo>) {
-        optionAdapter.coinInfos = coinInfos
     }
 }

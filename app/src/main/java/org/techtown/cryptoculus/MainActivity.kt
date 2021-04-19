@@ -126,7 +126,8 @@ class MainActivity : AppCompatActivity() {
                 getSharedPreferences("exchange", MODE_PRIVATE)
                         .getString("exchange", "coinone")!!,
                 getSharedPreferences("restartApp", MODE_PRIVATE)
-                        .getBoolean("restartApp", false)
+                        .getBoolean("restartApp", false),
+                application
         )).get(ViewModel::class.java)
 
         binding.apply {

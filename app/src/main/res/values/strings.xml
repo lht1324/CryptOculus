@@ -6,6 +6,8 @@
     <string name="high">고가: </string>
     <string name="low">저가: </string>
     <string name="volume">거래량: </string>
+    <string name="newList">신규상장</string>
+    <string name="deList">상장폐지</string>
     <string name="BTC">비트코인</string>
     <string name="BCH">비트코인 캐시</string>
     <string name="EOS">이오스</string>
