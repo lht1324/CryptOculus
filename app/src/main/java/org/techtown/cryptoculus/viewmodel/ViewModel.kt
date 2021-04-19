@@ -92,7 +92,7 @@ class ViewModel(exchange: String, restartApp: Boolean, application: Application)
                             // 신규 조금에 폐지 없거나 반대일 수도 있고
                             // 둘 다 넘칠 수도 있잖아
                             // 그냥 if 안 쓰고 비교하는 식으로 해야할 거 같은데    
-                            // 존나 미친 생각이긴 한데
+                            // 미친 생각이긴 한데
                             // 가로 리사이클러뷰 안에 세로 리사이클러뷰 2개를 넣는 거야
                             // 가로 사이즈가 1이면 isEmpty() == false인 리스트 맞춰서 텍스트뷰 바꿔주고
                             // 2면 둘 다 넣어주고
