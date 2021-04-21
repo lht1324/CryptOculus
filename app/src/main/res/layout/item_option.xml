@@ -46,7 +46,7 @@
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
                     android:checkMark="?android:attr/listChoiceIndicatorMultiple"
-                    android:onClick="@{() -> viewHolder.changeCoinView(coinInfo, position)}"
+                    android:onClick="@{() -> viewHolder.changeCoinView(coinInfo.coinViewCheck, position)}"
                     android:checked ="@{coinInfo.coinViewCheck}"
                     android:text='@{coinInfo.coinName + " / " + viewHolder.getCoinNameKorean(coinInfo.coinName)}'
                     android:textSize="20sp" />

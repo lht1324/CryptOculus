@@ -8,6 +8,10 @@
     <string name="volume">거래량: </string>
     <string name="news0">신규 상장</string>
     <string name="news1">상장 폐지</string>
+    <string name="spinner">Action Bar Spinner</string>
+    <string name="option">옵션</string>
+    <string name="help" >도움말</string>
+    <string name="update" >업데이트</string>
     <string name="BTC">비트코인</string>
     <string name="BCH">비트코인 캐시</string>
     <string name="EOS">이오스</string>

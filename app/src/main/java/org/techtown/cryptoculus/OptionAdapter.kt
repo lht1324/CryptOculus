@@ -37,10 +37,10 @@ class OptionAdapter : RecyclerView.Adapter<OptionAdapter.ViewHolder>() {
             )
         }
 
-        fun changeCoinView(coinInfo: CoinInfo, position: Int) {
-            coinInfos[position].coinViewCheck = !(coinInfo.coinViewCheck)
-            // 이건 자동으로 바뀌게 해야 하는 거 아냐?
-            binding.coinInfo!!.coinViewCheck = !(binding.coinInfo!!.coinViewCheck)
+        fun changeCoinView(coinViewCheck: Boolean, position: Int) {
+            coinInfos[position].coinViewCheck = !coinViewCheck
+            binding.coinInfo!!.coinViewCheck = !coinViewCheck
+            binding.checkedTextView.isChecked = !coinViewCheck
         }
 
         fun getCoinNameKorean(coinName: String): String {

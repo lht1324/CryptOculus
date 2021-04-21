@@ -8,8 +8,15 @@ import android.os.StrictMode
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.AdapterView
 import android.widget.Toast
+import android.widget.ArrayAdapter
+import android.widget.ListPopupWindow
+import android.widget.ListPopupWindow.MATCH_PARENT
+import android.widget.ListPopupWindow.WRAP_CONTENT
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.widget.AppCompatSpinner
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -98,25 +105,34 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.option_menu, menu)
 
+        val exchanges = arrayOf("Coinone", "Bithumb", "Upbit", "Huobi")
+        val item = menu?.findItem(R.id.spinner)
+        val spinner = item?.actionView as AppCompatSpinner
+        var arrayAdapter =
+                ArrayAdapter(this@MainActivity, R.layout.item_spinner, exchanges)
+        spinner.dropDownWidth = WRAP_CONTENT
+        spinner.adapter = arrayAdapter
+
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+
+            override fun onItemSelected(p0: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                when (spinner.getItemAtPosition(position)) {
+                    "Coinone" -> viewModel.getDataCoinone()
+                    "Bithumb" -> viewModel.getDataBithumb()
+                    "Upbit" -> viewModel.getDataUpbit()
+                    "Huobi" -> viewModel.getDataHuobi()
+                }
+            }
+
+            override fun onNothingSelected(p0: AdapterView<*>?) { }
+        }
+
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.coinone ->
-                viewModel.getDataCoinone()
-
-            R.id.bithumb ->
-                viewModel.getDataBithumb()
-
-            R.id.upbit ->
-                viewModel.getDataUpbit()
-
-            R.id.huobi ->
-                viewModel.getDataHuobi()
-
-            else -> openOptionDialog(mainAdapter.coinInfos)
-        }
+        if (item.itemId == R.id.option)
+            openOptionDialog(mainAdapter.coinInfos)
 
         return true
     }
@@ -145,9 +161,7 @@ class MainActivity : AppCompatActivity() {
             mainAdapter.coinInfos = coinInfos
             mainAdapter.notifyDataSetChanged()
         })
-        // 뷰모델의 coinInfos가 변경되는 조건
-        // 1. 액티비티에서 메뉴가 바뀐다
-        // 2. 일정 시간마다 업데이트되는 기능을 만들 건데 업데이트 될 때도 바뀐다
+
         viewModel.getNews().observe(this, { news ->
             // 일단 다이얼로그를 띄워야지
             // 메인 리사이클러뷰 업데이트 한 다음에 띄워야 하나?
@@ -158,7 +172,7 @@ class MainActivity : AppCompatActivity() {
             news[lastIndex] = type
              */
             if (news.size == 2) {
-                
+
             }
             else  {
 
@@ -166,42 +180,34 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private fun changeLayout(exchange: String) {
-        when (exchange) {
-            "coinone" -> {
-                supportActionBar!!.setBackgroundDrawable(ColorDrawable(0xFF0079FE.toInt()))
-                supportActionBar!!.title = "Coinone"
-            }
-            "bithumb" -> {
-                supportActionBar!!.setBackgroundDrawable(ColorDrawable(0xFFF37321.toInt()))
-                supportActionBar!!.title = "Bithumb"
-            }
-            "upbit" -> {
-                supportActionBar!!.setBackgroundDrawable(ColorDrawable(0xFF073686.toInt()))
-                supportActionBar!!.title = "Upbit"
-            }
-            "huobi" -> {
-                supportActionBar!!.setBackgroundDrawable(ColorDrawable(0xFF1C2143.toInt()))
-                supportActionBar!!.title = "Huobi"
-            }
-        }
-    }
+    private fun changeLayout(exchange: String) = supportActionBar!!
+            .setBackgroundDrawable(
+                    ColorDrawable(
+                            when (exchange) {
+                                "coinone" -> 0xFF0079FE.toInt()
+                                "bithumb" -> 0xFFF37321.toInt()
+                                "upbit" -> 0xFF073686.toInt()
+                                else -> 0xFF1C2143.toInt() // huobi
+                            }
+                    )
+            )
 
     private fun openOptionDialog(coinInfos: ArrayList<CoinInfo>) {
-        val optionDialog = OptionDialog(this)
-        optionDialog.optionAdapter.coinInfos = coinInfos
-        optionDialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        OptionDialog(this).apply {
+            this.coinInfos = coinInfos
+            window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
-        optionDialog.setOnDismissListener {
-            viewModel.updateCoinInfos(optionDialog.optionAdapter.coinInfos)
+            setOnDismissListener {
+                viewModel.updateCoinInfos(optionAdapter.coinInfos)
+            }
+
+            setCancelable(true)
+            show()
         }
-        // 여기서 DB 추가해야 하나?
-
-        optionDialog.setCancelable(true)
-        optionDialog.show()
     }
 
-    private fun println(data: String) {
-        Log.d("MainAcitivity", data)
-    }
+    private fun println(data: String) = Log.d("MainAcitivity", data)
+
+    private fun showToast(data: String) = Toast
+            .makeText(this@MainActivity, data, Toast.LENGTH_SHORT).show()
 }

@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.databinding.DataBindingUtil
+import androidx.recyclerview.widget.LinearLayoutManager
 import org.techtown.cryptoculus.databinding.DialogOptionBinding
 import org.techtown.cryptoculus.repository.model.CoinInfo
 import java.util.*
@@ -34,6 +35,7 @@ class OptionDialog(private val mContext: Context) : Dialog(mContext) {
     private fun init() {
         optionAdapter.coinInfos = coinInfos
         binding.recyclerView.adapter = optionAdapter
+        binding.recyclerView.layoutManager = LinearLayoutManager(mContext)
 
         layoutParams.apply {
             flags = WindowManager.LayoutParams.FLAG_DIM_BEHIND
