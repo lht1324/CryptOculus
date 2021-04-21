@@ -5,9 +5,11 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import org.techtown.cryptoculus.databinding.ItemNoticeBinding
 
+// 신규상장, 상장폐지별 리사이클러뷰 어댑터
+// item.noticeList 사용
 class NoticeAdapter : RecyclerView.Adapter<NoticeAdapter.ViewHolder>() {
     var notices = ArrayList<String>()
-    // string만으로 충분하지 않냐?
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoticeAdapter.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         val binding = ItemNoticeBinding.inflate(inflater, parent, false)

@@ -13,7 +13,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import org.techtown.cryptoculus.databinding.ActivityMainBinding
 import org.techtown.cryptoculus.repository.model.CoinInfo
 import org.techtown.cryptoculus.viewmodel.ViewModel
@@ -46,6 +45,7 @@ class MainActivity : AppCompatActivity() {
 
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
 
+        // Retrofit Call execute()
         if (android.os.Build.VERSION.SDK_INT > 9) {
             StrictMode.setThreadPolicy(StrictMode
                 .ThreadPolicy
@@ -148,6 +148,22 @@ class MainActivity : AppCompatActivity() {
         // 뷰모델의 coinInfos가 변경되는 조건
         // 1. 액티비티에서 메뉴가 바뀐다
         // 2. 일정 시간마다 업데이트되는 기능을 만들 건데 업데이트 될 때도 바뀐다
+        viewModel.getNews().observe(this, { news ->
+            // 일단 다이얼로그를 띄워야지
+            // 메인 리사이클러뷰 업데이트 한 다음에 띄워야 하나?
+            /*
+            news[0] = 상태(new, old, both)
+            news[1] = 신규상장 리스트
+            news[2] = 상장폐지 리스트
+            news[lastIndex] = type
+             */
+            if (news.size == 2) {
+                
+            }
+            else  {
+
+            }
+        })
     }
 
     private fun changeLayout(exchange: String) {

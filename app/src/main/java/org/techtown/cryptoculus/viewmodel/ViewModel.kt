@@ -20,8 +20,7 @@ import retrofit2.Response
 class ViewModel(exchange: String, restartApp: Boolean, application: Application) : ViewModel(){
     private val compositeDisposable = CompositeDisposable()
     private val coinInfos = MutableLiveData<ArrayList<CoinInfo>>()
-    private val deListCoins = MutableLiveData<ArrayList<String>>()
-    private val newListCoins = MutableLiveData<ArrayList<String>>()
+    private val news = MutableLiveData<ArrayList<Any>>()
     private var restartApp: Boolean
     private var exchange: String
     private val repository: Repository by lazy {
@@ -29,11 +28,8 @@ class ViewModel(exchange: String, restartApp: Boolean, application: Application)
     }
 
     fun getCoinInfos() = coinInfos
-
-    // 상장 폐지된 거랑 신규상장된 거
-    fun getDeListCoins() = deListCoins
-
-    fun getNewListCoins() = newListCoins
+    
+    fun getNews() = news
 
     fun getExchange() = exchange
 
@@ -62,6 +58,9 @@ class ViewModel(exchange: String, restartApp: Boolean, application: Application)
         compositeDisposable.dispose()
         super.onCleared()
     }
+    // getNews는 따로 만들자
+    // 위에 버튼 중에 시스템은 never로 하고 거래소는 스피너에 넣어버리면 공간 나올 거야
+    // 스피너 왼쪽으로 몰아버리면 never 안 쓰고 always 써도 될 지도 모르고
 
     fun getDataCoinone() = addDisposable(repository.getDataCoinone()
             .subscribe(
@@ -70,42 +69,52 @@ class ViewModel(exchange: String, restartApp: Boolean, application: Application)
                         val coinInfosTemp = CoinInfosMaker.maker("coinone", it.body()!!)
 
                         if (restartApp) {
-                            // 저장된 거에 있고 받아온 거에 없으면 폐지
-                            // 저장된 거에 없고 받아온 거에 있으면 상장
-                            // 두 놈 size가 같으면?
-                            // containsAll 한 번 돌리고 false 나오면 전체 돌려야겠지
-                            // oldCoinInfos.size > coinInfosTemp == 폐지
-                            // oldCoinInfos.size < coinInfosTemp == 상장
+                            // size가 같으면 둘 중 하나다
+                            // 업데이트가 없거나 같은 개수가 폐지되고 상장되었거나
                             val oldCoinInfos = repository.getAllByExchange(exchange)
-                            
-                            if (oldCoinInfos.size > coinInfosTemp.size) {
-                                val deListCoinsTemp = ArrayList<String>()
-                                for (i in oldCoinInfos.indices) {
-                                    if (coinInfosTemp.contains(oldCoinInfos[i]))
-                                        deListCoinsTemp.add(oldCoinInfos[i].coinName)
-                                }
-                                deListCoins.value = deListCoinsTemp
-                            }
-                            // 이게 맞나?
-                            // 어떤 상황이든 대비해야 하잖아
-                            // 사용자가 들어왔을 때 신규와 폐지가 아예 없을 수도 있고
-                            // 신규 조금에 폐지 없거나 반대일 수도 있고
-                            // 둘 다 넘칠 수도 있잖아
-                            // 그냥 if 안 쓰고 비교하는 식으로 해야할 거 같은데    
-                            // 미친 생각이긴 한데
-                            // 가로 리사이클러뷰 안에 세로 리사이클러뷰 2개를 넣는 거야
-                            // 가로 사이즈가 1이면 isEmpty() == false인 리스트 맞춰서 텍스트뷰 바꿔주고
-                            // 2면 둘 다 넣어주고
-                            // 두 놈 다 isEmpty() == true면 그냥 안 띄우고
-                            else {
+                            val newsTemp = ArrayList<Any>()
+
+                            // if (coinInfosTemp.containsAll(oldCoinInfos) || oldCoinInfos.containsAll(coinInfosTemp))
+                            if (coinInfosTemp.containsAll(oldCoinInfos)) { // 신규 상장
+                                    
                                 val newListCoinsTemp = ArrayList<String>()
-                                
+
                                 for (i in coinInfosTemp.indices) {
-                                    if (oldCoinInfos.contains(coinInfosTemp[i]))
+                                    if (!oldCoinInfos.contains(coinInfosTemp[i]))
                                         newListCoinsTemp.add(coinInfosTemp[i].coinName)
                                 }
-                                newListCoins.value = newListCoinsTemp
+
+                                newsTemp.add(newListCoinsTemp)
                             }
+
+                            if (oldCoinInfos.containsAll(coinInfosTemp)) { // 상장 폐지
+                                val deListCoinsTemp = ArrayList<String>()
+
+                                for (i in oldCoinInfos.indices) {
+                                    if (coinInfosTemp.contains(oldCoinInfos[i])) {
+                                        deListCoinsTemp.add(oldCoinInfos[i].coinName)
+                                        delete(oldCoinInfos[i])
+                                    }
+                                }
+
+                                newsTemp.add(deListCoinsTemp)
+
+                                // 이 안에서 newsTemp.size == 1이면 폐지만 됐다는 뜻이다
+                                if (newsTemp.isNotEmpty() && newsTemp.size == 1) // 상장 폐지
+                                    newsTemp.add(0, "deList")
+                            }
+
+                            // old만 받았다면 size는 2다
+                            // 겹치네
+                            if (newsTemp.isNotEmpty()) {
+                                if (newsTemp.size == 1)
+                                    newsTemp.add(0, "newList")
+                                if (newsTemp.size == 2 && newsTemp[0] != "deList")
+                                    newsTemp.add(0, "both")
+
+                                news.value = newsTemp
+                            }
+
                             updateAll(coinInfosTemp) { coinInfos.value = coinInfosTemp }
                         }
                         else
@@ -178,8 +187,8 @@ class ViewModel(exchange: String, restartApp: Boolean, application: Application)
     fun updateAll(coinInfos: ArrayList<CoinInfo>, next: () -> Unit) = addDisposable(repository.updateAll(coinInfos)
             .subscribe { next() })
 
-    fun delete(coinInfo: CoinInfo, next: () -> Unit) = addDisposable(repository.delete(coinInfo)
-            .subscribe { next() })
+    fun delete(coinInfo: CoinInfo) = addDisposable(repository.delete(coinInfo)
+            .subscribe { })
 
     fun updateCoinInfos(coinInfos: ArrayList<CoinInfo>) {
         this.coinInfos.value = coinInfos

@@ -7,8 +7,6 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.databinding.DataBindingUtil
 import org.techtown.cryptoculus.databinding.DialogNoticeBinding
-import org.techtown.cryptoculus.databinding.DialogOptionBinding
-import org.techtown.cryptoculus.repository.model.CoinInfo
 import java.util.*
 
 class NoticeDialog(private val mContext: Context) : Dialog(mContext) {
@@ -16,13 +14,10 @@ class NoticeDialog(private val mContext: Context) : Dialog(mContext) {
     private val layoutParams: WindowManager.LayoutParams by lazy {
         WindowManager.LayoutParams()
     }
-    private val noticeAdapterNewListed: NoticeAdapter by lazy {
-        NoticeAdapter()
+    private val newsAdapter: NewsAdapter by lazy {
+        NewsAdapter()
     }
-    private val noticeAdapterDeListed: NoticeAdapter by lazy {
-        NoticeAdapter()
-    }
-    lateinit var notices: ArrayList<String>
+    var news = ArrayList<ArrayList<String>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,8 +30,8 @@ class NoticeDialog(private val mContext: Context) : Dialog(mContext) {
 
     // Dialog layout setting
     private fun init() {
-        noticeAdapter.notices = notices
-        binding.recyclerView.adapter = noticeAdapter
+        newsAdapter.news = news
+        binding.recyclerView.adapter = newsAdapter
 
         layoutParams.apply {
             flags = WindowManager.LayoutParams.FLAG_DIM_BEHIND

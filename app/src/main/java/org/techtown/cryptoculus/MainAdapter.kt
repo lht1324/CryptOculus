@@ -44,16 +44,14 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
                 if (binding.root.resources.getIdentifier(
                         coinInfo.coinName.toLowerCase(Locale.ROOT),
                         "drawable",
-                        binding.root.context.packageName
-                    ) == 0
+                        binding.root.context.packageName) == 0
                 ) // 0 means 'cannot find'
                     R.drawable.basic
                 else
                     binding.root.resources.getIdentifier(
                         coinInfo.coinName.toLowerCase(Locale.ROOT),
                         "drawable",
-                        binding.root.context.packageName
-                    )
+                        binding.root.context.packageName)
             )
 
             binding.clicked = true
