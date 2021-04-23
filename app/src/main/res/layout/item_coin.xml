@@ -5,7 +5,7 @@
     <data>
         <variable
             name="viewHolder"
-            type="org.techtown.cryptoculus.MainAdapter.ViewHolder" />
+            type="org.techtown.cryptoculus.view.MainAdapter.ViewHolder" />
         <variable
             name="coinInfo"
             type="org.techtown.cryptoculus.repository.model.CoinInfo" />
@@ -18,7 +18,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:onClick="@{() -> viewHolder.onClick(clicked, coinInfo)}">
+        android:onClick="@{() -> viewHolder.onClick(clicked)}" >
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"

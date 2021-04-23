@@ -1,4 +1,4 @@
-package org.techtown.cryptoculus
+package org.techtown.cryptoculus.view
 
 import android.app.Dialog
 import android.content.Context
@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.databinding.DataBindingUtil
+import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.databinding.DialogNoticeBinding
 import java.util.*
 

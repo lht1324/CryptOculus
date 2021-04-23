@@ -1,4 +1,4 @@
-package org.techtown.cryptoculus
+package org.techtown.cryptoculus.view
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -10,7 +10,7 @@ import org.techtown.cryptoculus.databinding.ItemNoticeBinding
 class NoticeAdapter : RecyclerView.Adapter<NoticeAdapter.ViewHolder>() {
     var notices = ArrayList<String>()
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoticeAdapter.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         val binding = ItemNoticeBinding.inflate(inflater, parent, false)
 

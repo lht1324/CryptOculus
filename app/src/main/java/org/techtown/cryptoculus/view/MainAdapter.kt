@@ -1,4 +1,4 @@
-package org.techtown.cryptoculus
+package org.techtown.cryptoculus.view
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
@@ -7,9 +7,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AccelerateInterpolator
-import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView
+import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.databinding.ItemCoinBinding
 import org.techtown.cryptoculus.repository.model.CoinInfo
 import java.util.*
@@ -27,7 +26,10 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
     }
 
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-        viewHolder.bind(coinInfos[position])
+        // 옵션 끝나서 받아오면 업데이트 해야 하는 거 아냐?
+        // DB에 저장한 다음에 API 새로 받아오고 비교해야지
+        if (coinInfos[position].coinViewCheck)
+            viewHolder.bind(coinInfos[position])
     }
 
     override fun getItemCount(): Int = coinInfos.size
@@ -36,32 +38,28 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
         private val binding: ItemCoinBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(coinInfo: CoinInfo) {
-            binding.viewHolder = this
-            binding.coinInfo = coinInfo
+        fun bind(coinInfo: CoinInfo) = binding.apply {
+                viewHolder = this@ViewHolder
+                this.coinInfo = coinInfo
 
-            binding.imageView.setImageResource(
-                if (binding.root.resources.getIdentifier(
-                        coinInfo.coinName.toLowerCase(Locale.ROOT),
+                val drawableId = root.resources.getIdentifier(
+                        coinInfo.coinName.toLowerCase(),
                         "drawable",
-                        binding.root.context.packageName) == 0
-                ) // 0 means 'cannot find'
-                    R.drawable.basic
-                else
-                    binding.root.resources.getIdentifier(
-                        coinInfo.coinName.toLowerCase(Locale.ROOT),
-                        "drawable",
-                        binding.root.context.packageName)
-            )
+                        root.context.packageName)
 
-            binding.clicked = true
+                imageView.setImageResource(
+                        if (drawableId == 0)
+                            R.drawable.basic
+                        else
+                            drawableId
+                )
 
-            binding.executePendingBindings()
-        }
+                clicked = true
 
-        fun onClick(clicked: Boolean, coinInfo: CoinInfo) {
-            changeVisibility(clicked)
-        }
+                // executePendingBindings()
+            }
+
+        fun onClick(clicked: Boolean) = changeVisibility(clicked)
 
         fun getCoinNameKorean(coinName: String): String {
             val id = binding.root.resources.getIdentifier(
@@ -87,10 +85,11 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
             // Animation이 실행되는 시간, n/1000초
             valueAnimator.duration = 500
             valueAnimator.addUpdateListener { animation -> // imageView의 높이 변경
-                binding.linearLayout.layoutParams.height = animation.animatedValue as Int
-                binding.linearLayout.requestLayout()
-                // imageView가 실제로 사라지게하는 부분
-                binding.linearLayout.visibility = if (isExpanded) View.VISIBLE else View.GONE
+                binding.linearLayout.apply {
+                    layoutParams.height = animation.animatedValue as Int
+                    requestLayout()
+                    visibility = if (isExpanded) View.VISIBLE else View.GONE
+                }
             }
             // 터치했을 때 바로 사라지는 게 아니라 부드럽게 접히는 걸로 해 볼까?
             // 방향만 반대로 하면 되는 거 아냐

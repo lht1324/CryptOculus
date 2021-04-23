@@ -4,7 +4,7 @@
     <data>
         <variable
             name="viewHolder"
-            type="org.techtown.cryptoculus.OptionAdapter.ViewHolder" />
+            type="org.techtown.cryptoculus.view.OptionAdapter.ViewHolder" />
         <variable
             name="coinInfo"
             type="org.techtown.cryptoculus.repository.model.CoinInfo" />
@@ -47,7 +47,6 @@
                     android:layout_weight="1"
                     android:checkMark="?android:attr/listChoiceIndicatorMultiple"
                     android:onClick="@{() -> viewHolder.changeCoinView(coinInfo.coinViewCheck, position)}"
-                    android:checked ="@{coinInfo.coinViewCheck}"
                     android:text='@{coinInfo.coinName + " / " + viewHolder.getCoinNameKorean(coinInfo.coinName)}'
                     android:textSize="20sp" />
                     <!-- 문자열과 String 변수를 결합하고 싶다면 표현식을 ""가 아니라 ''로 감싸야 한다 -->

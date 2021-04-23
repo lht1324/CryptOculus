@@ -160,13 +160,8 @@ object CoinInfosMaker {
             }
         }
 
-        for (i in coinInfos.indices)
-            println("coinInfos[$i] of $exchange = ${coinInfos[i].coinName}")
-
         return coinInfos
     }
 
-    private fun println(data: String) {
-        Log.d("InitCoinInfos", data)
-    }
+    private fun println(data: String) = Log.d("InitCoinInfos", data)
 }

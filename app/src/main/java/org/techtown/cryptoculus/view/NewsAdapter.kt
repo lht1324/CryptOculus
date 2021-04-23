@@ -1,4 +1,4 @@
-package org.techtown.cryptoculus
+package org.techtown.cryptoculus.view
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
