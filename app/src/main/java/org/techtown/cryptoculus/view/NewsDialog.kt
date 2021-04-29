@@ -2,6 +2,8 @@ package org.techtown.cryptoculus.view
 
 import android.app.Dialog
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.WindowManager
@@ -10,7 +12,7 @@ import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.databinding.DialogNoticeBinding
 import java.util.*
 
-class NoticeDialog(private val mContext: Context) : Dialog(mContext) {
+class NewsDialog(private val mContext: Context) : Dialog(mContext) {
     private lateinit var binding: DialogNoticeBinding
     private val layoutParams: WindowManager.LayoutParams by lazy {
         WindowManager.LayoutParams()
@@ -41,6 +43,9 @@ class NoticeDialog(private val mContext: Context) : Dialog(mContext) {
             dimAmount = 0.5f
         }
 
-        window!!.attributes = layoutParams
+        window!!.apply {
+            attributes = layoutParams
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        }
     }
 }

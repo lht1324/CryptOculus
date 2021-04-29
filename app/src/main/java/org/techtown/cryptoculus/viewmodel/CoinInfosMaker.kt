@@ -23,7 +23,7 @@ object CoinInfosMaker {
         lateinit var formatterVolume: DecimalFormat
 
         when (exchange) {
-            "coinone" -> {
+            "Coinone" -> {
                 val gson = Gson()
                 val jsonObject = JSONObject(response.toString())
                 val coinNameOriginals = ArrayList<String>(jsonObject.keys().asSequence().toList())
@@ -57,7 +57,7 @@ object CoinInfosMaker {
                     coinInfos.add(coinInfo)
                 }
             }
-            "bithumb" -> {
+            "Bithumb" -> {
                 val gson = Gson()
                 val jsonObject = JSONObject(response.toString().replace("TRUE", "TRUETEMP")).getJSONObject("data")
                 val coinNameOriginals = ArrayList<String>(jsonObject.keys().asSequence().toList())
@@ -97,7 +97,7 @@ object CoinInfosMaker {
                     coinInfos.add(coinInfo)
                 }
             }
-            "upbit" -> { // ArrayList<TickerUpbit>
+            "Upbit" -> { // ArrayList<TickerUpbit>
                 val tickers = response as ArrayList<TickerUpbit>
 
                 for (i in tickers.indices) {
@@ -125,7 +125,7 @@ object CoinInfosMaker {
                     coinInfos.add(coinInfo)
                 }
             }
-            "huobi" -> { // huobi
+            "Huobi" -> { // huobi
                 val tickersTemp = (response as Huobi).data
                 var tickers = ArrayList<TickerHuobi>()
 
@@ -154,6 +154,7 @@ object CoinInfosMaker {
                         }
                         coinNameOriginal = tickers[i].symbol
                         coinName = tickers[i].symbol.replace("krw", "").toUpperCase()
+                        // DB랑 비교해서 다르면 news.value를 변경
                     }
                     coinInfos.add(coinInfo)
                 }

@@ -9,6 +9,7 @@ import org.techtown.cryptoculus.repository.model.CoinInfo
 import org.techtown.cryptoculus.repository.model.CoinInfoDao
 import org.techtown.cryptoculus.repository.model.CoinInfoDatabase
 import org.techtown.cryptoculus.repository.network.Client
+import retrofit2.Response
 
 class Repository(application: Application) {
     private val coinInfoDao: CoinInfoDao by lazy {
@@ -18,19 +19,7 @@ class Repository(application: Application) {
         Client()
     }
 
-    fun getDataCoinone() = client.getDataCoinone()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-
-    fun getDataBithumb() = client.getDataBithumb()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-
-    fun getDataUpbit() = client.getDataUpbit()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-
-    fun getDataHuobi() = client.getDataHuobi()
+    fun getData(exchange: String): Single<Response<Any>> = client.getData(exchange)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
 

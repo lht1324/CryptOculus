@@ -48,13 +48,10 @@ class ViewModel(exchange: String, restartApp: Boolean, application: Application)
     init {
         this.exchange = exchange
         this.restartApp = restartApp
+        println("exchange in ViewModel = $exchange")
+        println("restartApp in ViewModel = $restartApp")
 
-        when (exchange) {
-            "coinone" -> getDataCoinone()
-            "bithumb" -> getDataBithumb()
-            "upbit" -> getDataUpbit()
-            "huobi" -> getDataHuobi()
-        }
+        // getData(exchange)
     }
 
     override fun onCleared() {
@@ -62,167 +59,117 @@ class ViewModel(exchange: String, restartApp: Boolean, application: Application)
         super.onCleared()
     }
 
-    fun getDataNews() {
-        // getNews()는 무조건 getData~()가 실행된 뒤 실행된다
-        // 리사이클러뷰가 출력된 뒤 누르는 거니까
-        // size가 같으면 둘 중 하나다
-        // 업데이트가 없거나 같은 개수가 폐지되고 상장되었거나
-        val oldCoinInfos = repository.getAllByExchange(exchange)
-        val newsTemp = ArrayList<Any>()
-
-        // if (coinInfosTemp.containsAll(oldCoinInfos) || oldCoinInfos.containsAll(coinInfosTemp))
-        if (savedCoinInfos.containsAll(oldCoinInfos)) { // 신규 상장
-
-            val newListCoinsTemp = ArrayList<String>()
-
-            for (i in savedCoinInfos.indices) {
-                if (!oldCoinInfos.contains(savedCoinInfos[i]))
-                    newListCoinsTemp.add(savedCoinInfos[i].coinName)
+    // map을 여기서 한 다음에 결과만 넘겨주면 안 돼?
+    // 그냥 getData() 하나면 바로 실행되는 거잖아
+    fun getDataTemp(exchange: String) = repository.getData(exchange)
+            .map {
+                this.exchange = exchange
+                savedCoinInfos = CoinInfosMaker.maker(exchange, it.body()!!)
+                CoinInfosMaker.maker(exchange, it.body()!!)
             }
 
-            newsTemp.add(newListCoinsTemp)
-        }
+    fun getData(exchange: String) = addDisposable(repository.getData(exchange)
+            .subscribe(
+                    {
+                        this.exchange = exchange
+                        var coinInfosNew = CoinInfosMaker.maker(exchange, it.body()!!)
 
-        if (oldCoinInfos.containsAll(savedCoinInfos)) { // 상장 폐지
-            val deListCoinsTemp = ArrayList<String>()
+                        // DB에서 나머지 싹 다 받아오고
+                        // ticker만 바꿔주면 안 되나?
+                        // CoinInfosMaker에서 coinInfos를 항상 새로 만드는 게 문제잖아
+                        // ticker는 저장 안 하는 거니까 ticker만 새로 넣어주면 된다
+                        if (restartApp) {
+                            if (repository.getAllByExchange(exchange).isNotEmpty()) {
+                                val coinInfosOld = repository.getAllByExchange(exchange)
+                                val coinViewChecks = ArrayList<Boolean>()
 
-            for (i in oldCoinInfos.indices) {
-                if (savedCoinInfos.contains(oldCoinInfos[i])) {
-                    deListCoinsTemp.add(oldCoinInfos[i].coinName)
-                    delete(oldCoinInfos[i])
+                                for (i in coinInfosOld)
+                                    coinViewChecks.add(i.coinViewCheck)
+
+                                if (coinInfosOld.containsAll(coinInfosNew) || coinInfosNew.containsAll(coinInfosOld))
+                                    compareCoinInfos(coinInfosNew, exchange)
+                            }
+
+                            updateAll(coinInfosNew) {
+                                coinInfos.value = coinInfosNew
+                                savedCoinInfos = coinInfosNew
+                            }
+                        }
+
+                        else
+                            insertAll(coinInfosNew) {
+                                coinInfos.value = coinInfosNew
+                                savedCoinInfos = coinInfosNew
+                            }
+                    },
+                    { println("response error in getData(\"$exchange\") of ViewModel: ${it.message}") }
+            ))
+
+    private fun compareCoinInfos(coinInfosNew: ArrayList<CoinInfo>, exchange: String) { // newsMaker란 이름이 맞나?
+        val coinInfosOld = repository.getAllByExchange(exchange)
+        val newListing = coinInfosNew.containsAll(coinInfosOld)
+        val deListing = coinInfosOld.containsAll(coinInfosNew)
+        val newsTemp = ArrayList<Any>()
+        val coinList = ArrayList<String>()
+
+        if (newListing) { // 신규 상장
+            for (i in coinInfosNew.indices) {
+                if (!coinInfosOld.contains(coinInfosNew[i])) {
+                    coinList.add(coinInfosNew[i].coinName)
+                    insert(coinInfosNew[i])
                 }
             }
 
-            newsTemp.add(deListCoinsTemp)
+            newsTemp.add(coinList)
+        }
 
-            // 이 안에서 newsTemp.size == 1이면 폐지만 됐다는 뜻이다
-            if (newsTemp.isNotEmpty() && newsTemp.size == 1) // 상장 폐지
+        if (deListing) { // 상장 폐지
+            if (coinList.isNotEmpty()) // 신규상장 기록하느라 coinList를 사용했으면 재활용을 위해 비워주기
+                coinList.clear()
+
+            for (i in coinInfosOld.indices) {
+                if (coinInfosNew.contains(coinInfosOld[i])) {
+                    coinList.add(coinInfosOld[i].coinName)
+                    delete(coinInfosOld[i])
+                }
+            }
+
+            newsTemp.add(coinList)
+
+            if (newsTemp.size == 1) // 신규 상장 없고 상장 폐지만 있을 때
                 newsTemp.add(0, "deList")
         }
 
-        // old만 받았다면 size는 2다
-        // 겹치네
-        if (newsTemp.isNotEmpty()) {
-            if (newsTemp.size == 1)
-                newsTemp.add(0, "newList")
-            if (newsTemp.size == 2 && newsTemp[0] != "deList")
-                newsTemp.add(0, "both")
+        if (newsTemp.size == 1) // 신규 상장만 있고 상장 폐지 없을 때
+            newsTemp.add(0, "newList")
+        if (newsTemp.size == 2 && newsTemp[0] != "deList") // 신규 상장 없고 상장 폐지만 있어도 newsTemp.size는 2다
+            newsTemp.add(0, "both")
 
-            news.value = newsTemp
-        }
+        news.value = newsTemp
     }
 
-    fun getDataCoinone() = addDisposable(repository.getDataCoinone()
-            .subscribe(
-                    {
-                        exchange = "coinone"
-                        val coinInfosTemp = CoinInfosMaker.maker("coinone", it.body()!!)
+    fun refreshCoinInfos() = getDataTemp(exchange)
 
-                        if (restartApp)
-                            updateAll(coinInfosTemp) {
-                                coinInfos.value = coinInfosTemp
-                                savedCoinInfos = coinInfosTemp
-                            }
+    fun insert(coinInfo: CoinInfo) = addDisposable(repository.insert(coinInfo)
+            .subscribe {  })
 
-                        else
-                            insertAll(coinInfosTemp) {
-                                coinInfos.value = coinInfosTemp
-                                savedCoinInfos = coinInfosTemp
-                            }
-                    },
-                    { println("response error in getDataCoinone() of ViewModel: ${it.message}")}
-            ))
-
-    fun getDataBithumb() = addDisposable(repository.getDataBithumb()
-            .subscribe(
-                    {
-                        exchange = "bithumb"
-                        val coinInfosTemp = CoinInfosMaker.maker("bithumb", it.body()!!)
-
-                        if (restartApp)
-                            updateAll(coinInfosTemp) {
-                                coinInfos.value = coinInfosTemp
-                                savedCoinInfos = coinInfosTemp
-                            }
-
-                        else
-                            insertAll(coinInfosTemp) {
-                                coinInfos.value = coinInfosTemp
-                                savedCoinInfos = coinInfosTemp
-                            }
-                    },
-                    { println("response error in getDataBithumb() of ViewModel: ${it.message}")}
-            ))
-
-    fun getDataUpbit() = addDisposable(repository.getDataUpbit()
-            .subscribe(
-                    {
-                        exchange = "upbit"
-                        val coinInfosTemp = CoinInfosMaker.maker("upbit", it.body()!!)
-
-                        if (restartApp)
-                            updateAll(coinInfosTemp) {
-                                coinInfos.value = coinInfosTemp
-                                savedCoinInfos = coinInfosTemp
-                            }
-
-                        else
-                            insertAll(coinInfosTemp) {
-                                coinInfos.value = coinInfosTemp
-                                savedCoinInfos = coinInfosTemp
-                            }
-                    },
-                    { println("response error in getDataUpbit() of ViewModel: ${it.message}")}
-            ))
-
-    fun getDataHuobi() = addDisposable(repository.getDataHuobi()
-            .subscribe(
-                    {
-                        exchange = "huobi"
-                        val coinInfosTemp = CoinInfosMaker.maker("huobi", it.body()!!)
-
-                        if (restartApp)
-                            updateAll(coinInfosTemp) {
-                                coinInfos.value = coinInfosTemp
-                                savedCoinInfos = coinInfosTemp
-                            }
-
-                        else
-                            insertAll(coinInfosTemp) {
-                                coinInfos.value = coinInfosTemp
-                                savedCoinInfos = coinInfosTemp
-                            }
-                    },
-                    { println("response error in getDataHuobi() of ViewModel: ${it.message}")}
-            ))
-
-    fun refreshCoinInfos() = when (exchange) {
-            "coinone" -> getDataCoinone()
-            "bithumb" -> getDataBithumb()
-            "upbit" -> getDataUpbit()
-            else -> getDataHuobi()
-        }
-
-    fun insert(coinInfo: CoinInfo, next: () -> Unit) = addDisposable(repository.insert(coinInfo)
-            .subscribe { next() })
-
-    fun insertAll(coinInfos: ArrayList<CoinInfo>, next: () -> Unit) = addDisposable(repository.insertAll(coinInfos)
+    private fun insertAll(coinInfos: ArrayList<CoinInfo>, next: () -> Unit) = addDisposable(repository.insertAll(coinInfos)
             .subscribe { next() })
 
     fun update(coinInfo: CoinInfo) = addDisposable(repository.update(coinInfo)
             .subscribe { })
 
-    fun updateAll(coinInfos: ArrayList<CoinInfo>, next: () -> Unit) = addDisposable(repository.updateAll(coinInfos)
+    private fun updateAll(coinInfos: ArrayList<CoinInfo>, next: () -> Unit) = addDisposable(repository.updateAll(coinInfos)
             .subscribe { next() })
 
-    fun delete(coinInfo: CoinInfo) = addDisposable(repository.delete(coinInfo)
+    private fun delete(coinInfo: CoinInfo) = addDisposable(repository.delete(coinInfo)
             .subscribe { })
 
     fun updateCoinInfos(coinInfos: ArrayList<CoinInfo>) {
         this.coinInfos.value = coinInfos
     }
 
-    private fun addDisposable(disposable: Disposable) = compositeDisposable.add(disposable)
+    fun addDisposable(disposable: Disposable) = compositeDisposable.add(disposable)
 
     private fun println(data: String) = Log.d("ViewModel", data)
 }

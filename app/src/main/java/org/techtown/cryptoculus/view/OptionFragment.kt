@@ -19,10 +19,7 @@ class OptionFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        println("onCreateView() is executed in OptionFragment.")
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_option, container, false)
-
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
 
         setHasOptionsMenu(true)
 
@@ -35,9 +32,10 @@ class OptionFragment : Fragment() {
         super.onAttach(context)
         callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                (activity as MainActivity).changeToMainFragment()
+                (activity as MainActivity).backToMainActivity()
             }
         }
+        requireActivity().onBackPressedDispatcher.addCallback(this, callback)
     }
 
     override fun onDetach() {
@@ -54,7 +52,7 @@ class OptionFragment : Fragment() {
         super.onOptionsItemSelected(item)
 
         if (item.itemId == android.R.id.home)
-            (activity as MainActivity).changeToMainFragment()
+            (activity as MainActivity).supportFragmentManager.popBackStack()
 
         return true
     }

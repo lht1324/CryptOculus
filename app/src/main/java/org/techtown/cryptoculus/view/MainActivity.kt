@@ -6,10 +6,19 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.StrictMode
 import android.util.Log
+import android.view.*
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.ListPopupWindow
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.widget.AppCompatSpinner
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.databinding.ActivityMainBinding
 import org.techtown.cryptoculus.viewmodel.ViewModel
@@ -20,17 +29,16 @@ class MainActivity : AppCompatActivity() {
     // 고칠 것
     // 터치한 곳에 버튼 넣어서 거래소 차트로 연결해주기
     // 검색
+    // 정렬
     private lateinit var binding: ActivityMainBinding
-    private val mainFragment by lazy {
-        MainFragment()
+    private lateinit var callback: OnBackPressedCallback
+    private val mainAdapter: MainAdapter by lazy {
+        MainAdapter()
     }
     private var backPressedLast: Long = 0
     lateinit var viewModel: ViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        println("onCreate() is executed in MainActivity")
-        // if (savedInstanceState != null) 이거 붙이고 하면 일단 1번 호출된다
-        // onCreate() 2번 호출되는 원인 중 하나로 추정된다
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -47,18 +55,10 @@ class MainActivity : AppCompatActivity() {
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
-        if (savedInstanceState == null)
-            supportFragmentManager
-                    .beginTransaction()
-                    .add(R.id.constraintLayout, mainFragment)
-                    .commit()
-
         init()
     }
 
-    fun onBackPressedMainFragment() {
-        // Exit if touch once more before 2 secs
-        // 2초 전에 누르면 종료
+    fun onBackPressedMain() {
         if (System.currentTimeMillis() - backPressedLast < 2000) {
             finish()
             return
@@ -68,12 +68,28 @@ class MainActivity : AppCompatActivity() {
         backPressedLast = System.currentTimeMillis()
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                onBackPressedMain()
+            }
+        }
+        onBackPressedDispatcher.addCallback(this, callback)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        callback.remove()
+    }
+
     override fun onStop() {
         super.onStop()
 
         // 처음 시작했을 때만 restartApp을 삽입
         // 재시작했을 땐 restartApp을 삽입하지 않는다
-        // 처음 시작: true, 재시작: false
+        // 처음 시작: false, 재시작: true
         if (!getSharedPreferences("restartApp", MODE_PRIVATE).getBoolean("restartApp", false))
             getSharedPreferences("restartApp", MODE_PRIVATE)
                 .edit()
@@ -86,6 +102,58 @@ class MainActivity : AppCompatActivity() {
                 .apply()
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.option_menu, menu)
+
+        val item = menu?.findItem(R.id.spinner)
+        val spinner = item?.actionView as AppCompatSpinner
+
+        spinner.apply {
+            dropDownWidth = ListPopupWindow.WRAP_CONTENT
+            adapter = ArrayAdapter(this@MainActivity, R.layout.item_spinner, arrayOf("Coinone", "Bithumb", "Upbit", "Huobi"))
+
+            setSelection(when (viewModel.getExchange()) {
+                "Coinone" -> 0
+                "Bithumb" -> 1
+                "Upbit" -> 2
+                else -> 3 // "Huobi"
+            })
+            onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(p0: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    // viewModel.getData(spinner.getItemAtPosition(position) as String)
+
+                    showLoadingScreen(true)
+
+                    viewModel.addDisposable(viewModel.getDataTemp(spinner.getItemAtPosition(position) as String)
+                            .subscribe(
+                                    {
+                                        mainAdapter.apply {
+                                            coinInfos = it
+                                            notifyDataSetChanged()
+                                        }
+                                        changeLayout(spinner.getItemAtPosition(position) as String)
+                                        showLoadingScreen(false)
+                                    },
+                                    { println("response error in getData(\"${spinner.getItemAtPosition(position)}\"): ${it.message}") }
+                            ))
+                }
+
+                override fun onNothingSelected(p0: AdapterView<*>?) { }
+            }
+        }
+
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.option -> openOptionFragment()
+            // R.id.help -> { }
+        }
+
+        return super.onOptionsItemSelected(item)
+    }
+
     private fun init() {
         viewModel = ViewModelProvider(this, ViewModel.Factory(
                 getSharedPreferences("exchange", MODE_PRIVATE)
@@ -94,40 +162,89 @@ class MainActivity : AppCompatActivity() {
                         .getBoolean("restartApp", false),
                 application
         )).get(ViewModel::class.java)
+
+        binding.apply {
+            recyclerView.apply {
+                adapter = mainAdapter
+                layoutManager = LinearLayoutManager(this@MainActivity)
+            }
+
+            swipeRefreshLayout.setOnRefreshListener {
+                showLoadingScreen(true)
+
+                viewModel.refreshCoinInfos().subscribe(
+                        {
+                            mainAdapter.apply {
+                                coinInfos = it
+                                notifyDataSetChanged()
+                            }
+                            showLoadingScreen(false)
+                        },
+                        { println("response error in refreshCoinInfos(): ${it.message}") }
+                )
+                swipeRefreshLayout.isRefreshing = false
+            }
+        }
+
+        viewModel.getNews().observe(this, { news ->
+            openNewsDialog(news)
+        })
     }
 
     fun changeLayout(exchange: String) = supportActionBar!!
             .setBackgroundDrawable(
                     ColorDrawable(
                             when (exchange) {
-                                "coinone" -> 0xFF0079FE.toInt()
-                                "bithumb" -> 0xFFF37321.toInt()
-                                "upbit" -> 0xFF073686.toInt()
+                                "Coinone" -> 0xFF0079FE.toInt()
+                                "Bithumb" -> 0xFFF37321.toInt()
+                                "Upbit" -> 0xFF073686.toInt()
                                 else -> 0xFF1C2143.toInt() // huobi
                             }
                     )
             )
 
-    fun changeToOptionFragment() {
+    private fun openOptionFragment() {
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
         supportFragmentManager
                 .beginTransaction()
-                .replace(R.id.constraintLayout, OptionFragment())
+                .add(R.id.constraintLayout, OptionFragment())
+                .addToBackStack(null)
                 .commit()
     }
 
-    fun changeToMainFragment() {
-        // ...얘네 둘은 onCreateView() 한 번만 뜨는데?
-        // add가 문제네
+    fun backToMainActivity() {
         supportActionBar!!.setDisplayHomeAsUpEnabled(false)
 
         supportFragmentManager.popBackStack()
+    }
 
-        supportFragmentManager
-                .beginTransaction()
-                .replace(R.id.constraintLayout, mainFragment)
-                .commit()
+    private fun openNewsDialog(news: ArrayList<Any>) = NewsDialog(this).apply {
+        if (news[0] == "newList" || news[0] == "deList")
+            news.add(news[1])
+        else {
+            news.add(news[1])
+            news.add(news[2])
+        }
+    }
+
+    private fun showLoadingScreen(show: Boolean) = binding.apply {
+        if (show) {
+            constraintLayout.visibility = View.GONE
+
+            progressBar.apply {
+                isIndeterminate = true
+                visibility = View.VISIBLE
+            }
+        }
+        else {
+            constraintLayout.visibility = View.VISIBLE
+
+            progressBar.apply {
+                isIndeterminate = false
+                visibility = View.GONE
+            }
+        }
     }
 
     private fun println(data: String) = Log.d("MainAcitivity", data)
