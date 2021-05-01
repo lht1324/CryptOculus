@@ -15,7 +15,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class Client {
     fun getData(exchange: String): Single<Response<Any>> {
-        println("exchange in Client = $exchange")
         return when (exchange) {
             "Coinone" -> getService("https://api.coinone.co.kr/").getCoinone("all")
             "Bithumb" -> getService("https://api.bithumb.com/").getBithumb()

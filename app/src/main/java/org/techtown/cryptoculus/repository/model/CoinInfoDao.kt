@@ -1,5 +1,6 @@
 package org.techtown.cryptoculus.repository.model
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
 import androidx.room.Dao
 
@@ -8,8 +9,9 @@ interface CoinInfoDao {
     @Query("SELECT * FROM coinInfoTable")
     fun getAll(): List<CoinInfo>
 
+    // getAllByExchange를 observe?
     @Query("Select * from coinInfoTable where exchange is :exchange")
-    fun getAllByExchange(exchange: String): List<CoinInfo>
+    fun getAllByExchange(exchange: String): ArrayList<CoinInfo>
 
     @Query("Select * from coinInfoTable where exchange is :exchange and coinName is :coinName")
     fun getToDo(exchange: String, coinName: String): CoinInfo

@@ -4,7 +4,7 @@
     <data>
         <variable
             name="viewHolder"
-            type="org.techtown.cryptoculus.view.OptionAdapter.ViewHolder" />
+            type="org.techtown.cryptoculus.view.PreferencesAdapter.ViewHolder" />
         <variable
             name="coinInfo"
             type="org.techtown.cryptoculus.repository.model.CoinInfo" />

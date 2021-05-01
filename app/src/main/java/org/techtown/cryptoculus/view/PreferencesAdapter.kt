@@ -1,6 +1,5 @@
 package org.techtown.cryptoculus.view
 
-import android.content.res.Resources
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.lifecycle.MutableLiveData
@@ -11,7 +10,7 @@ import org.techtown.cryptoculus.repository.model.CoinInfo
 import java.util.*
 import kotlin.collections.ArrayList
 
-class OptionAdapter : RecyclerView.Adapter<OptionAdapter.ViewHolder>() {
+class PreferencesAdapter : RecyclerView.Adapter<PreferencesAdapter.ViewHolder>() {
     var coinInfos = ArrayList<CoinInfo>()
     val clickedItem = MutableLiveData<CoinInfo>()
 
@@ -30,7 +29,7 @@ class OptionAdapter : RecyclerView.Adapter<OptionAdapter.ViewHolder>() {
         viewHolder.bind(coinInfos[position], position)
     }
 
-    override fun getItemCount(): Int = coinInfos.size
+    override fun getItemCount() = coinInfos.size
 
     inner class ViewHolder(private val binding: ItemOptionBinding,
         private val onItemClicked: (CoinInfo) -> Unit) : RecyclerView.ViewHolder(binding.root) {

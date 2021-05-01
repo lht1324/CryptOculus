@@ -1,6 +1,5 @@
 package org.techtown.cryptoculus.view
 
-import android.content.pm.ActivityInfo
 import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -17,11 +16,9 @@ import androidx.appcompat.widget.AppCompatSpinner
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
 import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.databinding.ActivityMainBinding
-import org.techtown.cryptoculus.viewmodel.ViewModel
+import org.techtown.cryptoculus.viewmodel.MainViewModel
 
 // CryptOculusMVVM without Database Temporary
 
@@ -36,7 +33,7 @@ class MainActivity : AppCompatActivity() {
         MainAdapter()
     }
     private var backPressedLast: Long = 0
-    lateinit var viewModel: ViewModel
+    lateinit var mainViewModel: MainViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,7 +95,7 @@ class MainActivity : AppCompatActivity() {
 
         getSharedPreferences("exchange", MODE_PRIVATE)
                 .edit()
-                .putString("exchange", viewModel.getExchange())
+                .putString("exchange", mainViewModel.getExchange())
                 .apply()
     }
 
@@ -110,9 +107,12 @@ class MainActivity : AppCompatActivity() {
 
         spinner.apply {
             dropDownWidth = ListPopupWindow.WRAP_CONTENT
-            adapter = ArrayAdapter(this@MainActivity, R.layout.item_spinner, arrayOf("Coinone", "Bithumb", "Upbit", "Huobi"))
+            adapter = ArrayAdapter(
+                    this@MainActivity,
+                    R.layout.item_spinner,
+                    arrayOf("Coinone", "Bithumb", "Upbit", "Huobi"))
 
-            setSelection(when (viewModel.getExchange()) {
+            setSelection(when (mainViewModel.getExchange()) {
                 "Coinone" -> 0
                 "Bithumb" -> 1
                 "Upbit" -> 2
@@ -123,8 +123,7 @@ class MainActivity : AppCompatActivity() {
                     // viewModel.getData(spinner.getItemAtPosition(position) as String)
 
                     showLoadingScreen(true)
-
-                    viewModel.addDisposable(viewModel.getDataTemp(spinner.getItemAtPosition(position) as String)
+                    mainViewModel.addDisposable(mainViewModel.getData(spinner.getItemAtPosition(position) as String)
                             .subscribe(
                                     {
                                         mainAdapter.apply {
@@ -155,13 +154,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun init() {
-        viewModel = ViewModelProvider(this, ViewModel.Factory(
-                getSharedPreferences("exchange", MODE_PRIVATE)
-                        .getString("exchange", "coinone")!!,
-                getSharedPreferences("restartApp", MODE_PRIVATE)
-                        .getBoolean("restartApp", false),
-                application
-        )).get(ViewModel::class.java)
+        mainViewModel = ViewModelProvider(this, MainViewModel.Factory(application)).get(MainViewModel::class.java)
 
         binding.apply {
             recyclerView.apply {
@@ -172,7 +165,7 @@ class MainActivity : AppCompatActivity() {
             swipeRefreshLayout.setOnRefreshListener {
                 showLoadingScreen(true)
 
-                viewModel.refreshCoinInfos().subscribe(
+                mainViewModel.refreshCoinInfos().subscribe(
                         {
                             mainAdapter.apply {
                                 coinInfos = it
@@ -186,7 +179,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        viewModel.getNews().observe(this, { news ->
+        mainViewModel.getNews().observe(this, { news ->
             openNewsDialog(news)
         })
     }
@@ -208,7 +201,7 @@ class MainActivity : AppCompatActivity() {
 
         supportFragmentManager
                 .beginTransaction()
-                .add(R.id.constraintLayout, OptionFragment())
+                .add(R.id.constraintLayout, PreferencesFragment())
                 .addToBackStack(null)
                 .commit()
     }
