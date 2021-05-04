@@ -12,6 +12,8 @@ data class TickerBithumb(
         val maxPrice: String,
         @SerializedName("min_price")
         val minPrice: String,
+        @SerializedName("prev_closing_price")
+        val prevClosingPrice: String,
         @SerializedName("units_traded")
         val unitsTraded: String
 ) : Ticker()

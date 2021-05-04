@@ -8,12 +8,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.databinding.DataBindingUtil
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import org.techtown.cryptoculus.R
-import org.techtown.cryptoculus.databinding.DialogNoticeBinding
+import org.techtown.cryptoculus.databinding.DialogNewsBinding
 import java.util.*
 
 class NewsDialog(private val mContext: Context) : Dialog(mContext) {
-    private lateinit var binding: DialogNoticeBinding
+    private lateinit var binding: DialogNewsBinding
     private val layoutParams: WindowManager.LayoutParams by lazy {
         WindowManager.LayoutParams()
     }
@@ -25,7 +27,7 @@ class NewsDialog(private val mContext: Context) : Dialog(mContext) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.inflate(LayoutInflater.from(mContext),
-                R.layout.dialog_notice, null, false)
+                R.layout.dialog_news, null, false)
 
         setContentView(binding.root)
         init()
@@ -34,7 +36,10 @@ class NewsDialog(private val mContext: Context) : Dialog(mContext) {
     // Dialog layout setting
     private fun init() {
         newsAdapter.news = news
-        binding.recyclerView.adapter = newsAdapter
+        binding.recyclerView.apply {
+            adapter = newsAdapter
+            layoutManager = GridLayoutManager(mContext, 1, RecyclerView.HORIZONTAL, false)
+        }
 
         layoutParams.apply {
             flags = WindowManager.LayoutParams.FLAG_DIM_BEHIND

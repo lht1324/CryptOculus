@@ -1,5 +1,6 @@
 package org.techtown.cryptoculus.view
 
+import android.app.Application
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
@@ -9,12 +10,15 @@ import androidx.activity.OnBackPressedCallback
 import androidx.annotation.RequiresApi
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import org.techtown.cryptoculus.R
-import org.techtown.cryptoculus.databinding.FragmentOptionBinding
+import org.techtown.cryptoculus.databinding.FragmentPreferencesBinding
+import org.techtown.cryptoculus.viewmodel.PreferencesViewModel
 
-class PreferencesFragment : Fragment() {
-    private lateinit var binding: FragmentOptionBinding
+class PreferencesFragment(private val application: Application) : Fragment() {
+    private lateinit var binding: FragmentPreferencesBinding
+    private lateinit var viewModel: PreferencesViewModel
     private lateinit var callback: OnBackPressedCallback
     private val preferencesAdapter: PreferencesAdapter by lazy {
         PreferencesAdapter()
@@ -22,7 +26,7 @@ class PreferencesFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_option, container, false)
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_preferences, container, false)
 
         setHasOptionsMenu(true)
 
@@ -62,7 +66,8 @@ class PreferencesFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.N)
     private fun init() {
-        preferencesAdapter.coinInfos = useViewModel().getSavedCoinInfos()
+        viewModel = ViewModelProvider(this, PreferencesViewModel.Factory(application)).get(PreferencesViewModel::class.java)
+        preferencesAdapter.coinInfos
 
         binding.apply {
             recyclerView.apply {
@@ -72,33 +77,25 @@ class PreferencesFragment : Fragment() {
             }
 
             checkedTextView.apply {
-                isChecked = useViewModel().getOptionCheckAll()
+                viewModel.getCheckAll().observe(viewLifecycleOwner, {
+                    isChecked = it
+                })
 
                 setOnClickListener {
-                    preferencesAdapter.apply {
-                        coinInfos.replaceAll {
-                            it.coinViewCheck = !(checkedTextView.isChecked)
-                            it
-                        }
-                        // 여기서 이러는 게 아니라 뷰모델에서 달라진 걸 넣어줘야 하는 거 아냐?
-                        // useViewModel().checkedAll() 이런 식으로
-                        // 뤼이드에서 들었지
-                        // 뷰모델 하나한테 모든 걸 맏기기보단 분업화하는 게 낫다고
-
-                        notifyDataSetChanged()
-                    }
-
+                    viewModel.updateCoinViewChecks(isChecked)
                     checkedTextView.toggle()
                 }
             }
         }
+        viewModel.getCoinInfos().observe(viewLifecycleOwner, {
+            preferencesAdapter.coinInfos = it
+            preferencesAdapter.notifyDataSetChanged()
+        })
 
-        preferencesAdapter.clickedItem.observe(viewLifecycleOwner, { coinInfo ->
-            useViewModel().update(coinInfo)
+        preferencesAdapter.clickedItem.observe(viewLifecycleOwner, { coinName ->
+            viewModel.updateCoinViewCheck(coinName)
         })
     }
 
-    private fun useViewModel() = (activity as MainActivity).mainViewModel
-
-    private fun println(data: String) = Log.d("OptionFragment", data)
+    private fun println(data: String) = Log.d("PreferencesFragment", data)
 }

@@ -22,7 +22,7 @@ abstract class CoinInfoDatabase : RoomDatabase() {
                     INSTANCE = Room.databaseBuilder(
                         context.applicationContext,
                         CoinInfoDatabase::class.java,
-                        "todo_database")
+                        "coininfo_database")
                         .allowMainThreadQueries()
                         .build()
                 }

@@ -1,37 +1,29 @@
 package org.techtown.cryptoculus.viewmodel
 
 import android.app.Application
-import android.content.Context.MODE_PRIVATE
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
-import org.techtown.cryptoculus.repository.Repository
 import org.techtown.cryptoculus.repository.RepositoryImpl
 import org.techtown.cryptoculus.repository.model.CoinInfo
 
 class MainViewModel(application: Application) : ViewModel(){
     private val compositeDisposable = CompositeDisposable()
     private val news = MutableLiveData<ArrayList<Any>>()
-    private var savedCoinInfos = ArrayList<CoinInfo>()
-    private var optionCheckAll = false
-    private var restartApp: Boolean
-    private var exchange: String
+    private val coinInfos = MutableLiveData<ArrayList<CoinInfo>>()
     private val repository by lazy {
         RepositoryImpl(application)
     }
-    
+    private var restartApp = repository.getRestartApp()
+    private var exchange = repository.getExchange()
+    private var sortMode = repository.getExchange() // 얘도 저장해야 해
+
+    fun getCoinInfos() = coinInfos
+
     fun getNews() = news
-
-    fun getExchange() = exchange
-
-    fun getSavedCoinInfos() = savedCoinInfos
-
-    fun getOptionCheckAll() = optionCheckAll
 
     class Factory(private val application: Application) : ViewModelProvider.Factory {
         override fun <T : ViewModel?> create(modelClass: Class<T>): T {
@@ -39,79 +31,64 @@ class MainViewModel(application: Application) : ViewModel(){
         }
     }
 
-    init {
-        this.exchange = application.getSharedPreferences("exchange", MODE_PRIVATE)
-                .getString("exchange", "Coinone")!!
-        this.restartApp = application.getSharedPreferences("restartApp", MODE_PRIVATE)
-                .getBoolean("restartApp", false)
-        // 전부 리포지토리로 옮기자
-    }
-
     override fun onCleared() {
         compositeDisposable.dispose()
+        putExchange()
+        if (!restartApp)
+            putRestartApp()
         super.onCleared()
     }
 
-    // map을 여기서 한 다음에 결과만 넘겨주면 안 돼?
-    // 그냥 getData() 하나면 바로 실행되는 거잖아
-    fun getData(exchange: String) = repository.getData(exchange)
+    private fun getData(exchange: String) = addDisposable(repository.getData(exchange)
             .map {
                 this.exchange = exchange
+                val coinInfosNew = CoinInfosMaker.maker(exchange, it.body()!!)
+
                 if (restartApp) {
-                    val coinInfosOld = repository.getAllByExchange(exchange)
-                    for (i in coinInfosOld.indices) {
-                        if (i != coinInfosOld.size - 1 && !coinInfosOld[i].coinViewCheck) {
-                            optionCheckAll = false
-                            break
-                        }
-                        if (i == coinInfosOld.size - 1 && coinInfosOld[i].coinViewCheck) {
-                            optionCheckAll = true
-                        }
+                    // News
+                    if (repository.getAllByExchange(exchange).isNotEmpty()) {
+                        val coinInfosOld = ArrayList(repository.getAllByExchange(exchange))
+                        val coinViewChecks = ArrayList<Boolean>()
+
+                        for (i in coinInfosOld)
+                            coinViewChecks.add(i.coinViewCheck)
+
+                        if (coinInfosOld.containsAll(coinInfosNew) || coinInfosNew.containsAll(coinInfosOld))
+                            compareCoinInfos(coinInfosNew, exchange)
                     }
                 }
-                savedCoinInfos = CoinInfosMaker.maker(exchange, it.body()!!)
-                CoinInfosMaker.maker(exchange, it.body()!!)
-            }
-
-    /* fun getData(exchange: String) = addDisposable(repository.getData(exchange)
-            .subscribe(
+                coinInfosNew.sortWith { o1, o2 ->
+                    // o1.ticker.changeRate.toDouble().compareTo(o2.ticker.changeRate.toDouble())
+                    o2.ticker.changeRate.toDouble().compareTo(o1.ticker.changeRate.toDouble())
+                }
+                // 이름, 현재가
+                // savedCoinInfos = CoinInfosMaker.maker(exchange, it.body()!!)
+                /* coinInfosNew.sortWith { o1, o2 ->
+                    o1.coinName.compareTo(o2.coinName) // 오름차순
+                    // o2.coinName.compareTo(o1.coinName) // 내림차순
+                }
+                coinInfosNew.sortWith { o1, o2 ->
+                    // o1.ticker.changeRate.toDouble().compareTo(o2.ticker.changeRate.toDouble())
+                    o2.ticker.changeRate.toDouble().compareTo(o1.ticker.changeRate.toDouble())
+                }
+                coinInfosNew.sortWith { o1, o2 ->
+                    // o1.ticker.lastInTicker.replace(",", "").toDouble().compareTo(o2.ticker.lastInTicker.replace(",", "").toDouble()) // 오름차순
+                    o2.ticker.lastInTicker.replace(",", "").toDouble().compareTo(o1.ticker.lastInTicker.replace(",", "").toDouble()) // 내림차순
+                } */
+                coinInfosNew
+            }.subscribe(
                     {
-                        this.exchange = exchange
-                        var coinInfosNew = CoinInfosMaker.maker(exchange, it.body()!!)
-
-                        // DB에서 나머지 싹 다 받아오고
-                        // ticker만 바꿔주면 안 되나?
-                        // CoinInfosMaker에서 coinInfos를 항상 새로 만드는 게 문제잖아
-                        // ticker는 저장 안 하는 거니까 ticker만 새로 넣어주면 된다
-                        if (restartApp) {
-                            if (repository.getAllByExchange(exchange).isNotEmpty()) {
-                                val coinInfosOld = repository.getAllByExchange(exchange)
-                                val coinViewChecks = ArrayList<Boolean>()
-
-                                for (i in coinInfosOld)
-                                    coinViewChecks.add(i.coinViewCheck)
-
-                                if (coinInfosOld.containsAll(coinInfosNew) || coinInfosNew.containsAll(coinInfosOld))
-                                    compareCoinInfos(coinInfosNew, exchange)
-                            }
-
-                            updateAll(coinInfosNew) {
-                                coinInfos.value = coinInfosNew
-                                savedCoinInfos = coinInfosNew
-                            }
-                        }
-
+                        // restartApp만 하면 되는 게 아니라 DB가 비었는지도 알아야 한다
+                        if (restartApp && repository.getAllByExchange(exchange).isNotEmpty())
+                            updateAll(it.toList()) { coinInfos.value = it }
                         else
-                            insertAll(coinInfosNew) {
-                                coinInfos.value = coinInfosNew
-                                savedCoinInfos = coinInfosNew
-                            }
+                            insertAll(it.toList()) { coinInfos.value = it }
                     },
-                    { println("response error in getData(\"$exchange\") of ViewModel: ${it.message}") }
-            )) */
+                    { println("response error in getData(\"${exchange}\"): ${it.message}") }
+            ))
 
-    private fun compareCoinInfos(coinInfosNew: ArrayList<CoinInfo>, exchange: String) { // newsMaker란 이름이 맞나?
-        val coinInfosOld = repository.getAllByExchange(exchange)
+    private fun compareCoinInfos(coinInfosNew: ArrayList<CoinInfo>, exchange: String) {
+        val coinInfosOld = ArrayList(repository.getAllByExchange(exchange))
         val newListing = coinInfosNew.containsAll(coinInfosOld)
         val deListing = coinInfosOld.containsAll(coinInfosNew)
         val newsTemp = ArrayList<Any>()
@@ -153,34 +130,44 @@ class MainViewModel(application: Application) : ViewModel(){
         news.value = newsTemp
     }
 
-    fun refreshCoinInfos() = getData(exchange)
-
-    @RequiresApi(Build.VERSION_CODES.N)
-    fun updateCoinViewChecks(checkAll: Boolean) {
-        val coinInfosTemp = repository.getAllByExchange(exchange)
-        coinInfosTemp.replaceAll {
-            it.coinViewCheck = !checkAll
-            it
-        }
-        updateAll(coinInfosTemp)
-    }
-
-    fun insert(coinInfo: CoinInfo) = addDisposable(repository.insert(coinInfo)
+    private fun insert(coinInfo: CoinInfo) = addDisposable(repository.insert(coinInfo)
             .subscribe {  })
 
-    private fun insertAll(coinInfos: ArrayList<CoinInfo>, next: () -> Unit) = addDisposable(repository.insertAll(coinInfos)
+    private fun insertAll(coinInfos: List<CoinInfo>, next: () -> Unit) = addDisposable(repository.insertAll(coinInfos)
             .subscribe { next() })
 
     fun update(coinInfo: CoinInfo) = addDisposable(repository.update(coinInfo)
             .subscribe { })
 
-    private fun updateAll(coinInfos: ArrayList<CoinInfo>) = addDisposable(repository.updateAll(coinInfos)
-            .subscribe { })
+    private fun updateAll(coinInfos: List<CoinInfo>, next: () -> Unit) = addDisposable(repository.updateAll(coinInfos)
+            .subscribe { next() })
 
     private fun delete(coinInfo: CoinInfo) = addDisposable(repository.delete(coinInfo)
             .subscribe { })
 
-    fun addDisposable(disposable: Disposable) = compositeDisposable.add(disposable)
+    fun refreshCoinInfos() = getData(exchange)
 
-    private fun println(data: String) = Log.d("ViewModel", data)
+    fun changeExchange(position: Int) {
+        exchange = when (position) {
+            0 -> "Coinone"
+            1 -> "Bithumb"
+            else -> "Upbit" // 2
+        }
+        putExchange()
+        getData(exchange)
+    }
+
+    fun getSelection() = when (exchange) {
+        "Coinone" -> 0
+        "Bithumb" -> 1
+        else -> 2
+    }
+
+    private fun putExchange() = repository.putExchange(exchange)
+
+    private fun putRestartApp() = repository.putRestartApp(true)
+
+    private fun addDisposable(disposable: Disposable) = compositeDisposable.add(disposable)
+
+    private fun println(data: String) = Log.d("MainViewModel", data)
 }

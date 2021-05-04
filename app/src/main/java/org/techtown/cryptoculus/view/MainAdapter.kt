@@ -3,6 +3,7 @@ package org.techtown.cryptoculus.view
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
+import android.graphics.Color
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -13,7 +14,6 @@ import org.techtown.cryptoculus.databinding.ItemCoinBinding
 import org.techtown.cryptoculus.repository.model.CoinInfo
 import java.util.*
 import kotlin.collections.ArrayList
-
 
 class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
     var coinInfos = ArrayList<CoinInfo>()
@@ -26,8 +26,6 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
     }
 
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-        // 옵션 끝나서 받아오면 업데이트 해야 하는 거 아냐?
-        // DB에 저장한 다음에 API 새로 받아오고 비교해야지
         if (coinInfos[position].coinViewCheck)
             viewHolder.bind(coinInfos[position])
     }
@@ -39,25 +37,27 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(coinInfo: CoinInfo) = binding.apply {
-                viewHolder = this@ViewHolder
-                this.coinInfo = coinInfo
+            viewHolder = this@ViewHolder
+            this.coinInfo = coinInfo
 
-                val drawableId = root.resources.getIdentifier(
-                        coinInfo.coinName.toLowerCase(),
-                        "drawable",
-                        root.context.packageName)
+            val drawableId = root.resources.getIdentifier(
+                    coinInfo.coinName.toLowerCase(),
+                    "drawable",
+                    root.context.packageName)
 
-                imageView.setImageResource(
-                        if (drawableId == 0)
-                            R.drawable.basic
-                        else
-                            drawableId
-                )
+            imageView.setImageResource(
+                    if (drawableId == 0) R.drawable.basic
+                    else drawableId
+            )
 
-                clicked = true
+            clicked = true
 
-                // executePendingBindings()
-            }
+            textView3.setTextColor(when {
+                coinInfo.ticker.changeRate.toDouble() < 0.0 -> Color.rgb(0, 0, 255)
+                coinInfo.ticker.changeRate.toDouble() > 0.0 -> Color.rgb(255, 0, 0)
+                else -> Color.rgb(128, 128, 128)
+            })
+        }
 
         fun onClick(clicked: Boolean) = changeVisibility(clicked)
 

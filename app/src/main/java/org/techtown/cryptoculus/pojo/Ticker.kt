@@ -6,4 +6,5 @@ open class Ticker {
     var highInTicker = ""
     var lowInTicker = ""
     var volumeInTicker = ""
+    var changeRate = ""
 }

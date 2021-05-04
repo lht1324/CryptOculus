@@ -1,5 +1,6 @@
 package org.techtown.cryptoculus.view
 
+import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -11,6 +12,7 @@ import android.widget.ArrayAdapter
 import android.widget.ListPopupWindow
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.AppCompatSpinner
 import androidx.databinding.DataBindingUtil
@@ -19,8 +21,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.databinding.ActivityMainBinding
 import org.techtown.cryptoculus.viewmodel.MainViewModel
-
-// CryptOculusMVVM without Database Temporary
 
 class MainActivity : AppCompatActivity() {
     // 고칠 것
@@ -33,22 +33,21 @@ class MainActivity : AppCompatActivity() {
         MainAdapter()
     }
     private var backPressedLast: Long = 0
-    lateinit var mainViewModel: MainViewModel
+    lateinit var viewModel: MainViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        println("onCreate() is executed.")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
 
         // For Retrofit.Call.execute()
-        if (android.os.Build.VERSION.SDK_INT > 9) {
-            StrictMode.setThreadPolicy(StrictMode
-                .ThreadPolicy
-                .Builder()
-                .permitAll()
-                .build())
-        }
+        StrictMode.setThreadPolicy(StrictMode
+            .ThreadPolicy
+            .Builder()
+            .permitAll()
+            .build())
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
@@ -65,8 +64,8 @@ class MainActivity : AppCompatActivity() {
         backPressedLast = System.currentTimeMillis()
     }
 
-    override fun onResume() {
-        super.onResume()
+    override fun onStart() {
+        super.onStart()
 
         callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -78,25 +77,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+
         callback.remove()
-    }
-
-    override fun onStop() {
-        super.onStop()
-
-        // 처음 시작했을 때만 restartApp을 삽입
-        // 재시작했을 땐 restartApp을 삽입하지 않는다
-        // 처음 시작: false, 재시작: true
-        if (!getSharedPreferences("restartApp", MODE_PRIVATE).getBoolean("restartApp", false))
-            getSharedPreferences("restartApp", MODE_PRIVATE)
-                .edit()
-                .putBoolean("restartApp", true)
-                .apply()
-
-        getSharedPreferences("exchange", MODE_PRIVATE)
-                .edit()
-                .putString("exchange", mainViewModel.getExchange())
-                .apply()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -110,31 +92,15 @@ class MainActivity : AppCompatActivity() {
             adapter = ArrayAdapter(
                     this@MainActivity,
                     R.layout.item_spinner,
-                    arrayOf("Coinone", "Bithumb", "Upbit", "Huobi"))
+                    arrayOf("Coinone", "Bithumb", "Upbit"))
 
-            setSelection(when (mainViewModel.getExchange()) {
-                "Coinone" -> 0
-                "Bithumb" -> 1
-                "Upbit" -> 2
-                else -> 3 // "Huobi"
-            })
+            setSelection(viewModel.getSelection())
+
             onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(p0: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                    // viewModel.getData(spinner.getItemAtPosition(position) as String)
-
                     showLoadingScreen(true)
-                    mainViewModel.addDisposable(mainViewModel.getData(spinner.getItemAtPosition(position) as String)
-                            .subscribe(
-                                    {
-                                        mainAdapter.apply {
-                                            coinInfos = it
-                                            notifyDataSetChanged()
-                                        }
-                                        changeLayout(spinner.getItemAtPosition(position) as String)
-                                        showLoadingScreen(false)
-                                    },
-                                    { println("response error in getData(\"${spinner.getItemAtPosition(position)}\"): ${it.message}") }
-                            ))
+                    changeLayout(position)
+                    viewModel.changeExchange(position)
                 }
 
                 override fun onNothingSelected(p0: AdapterView<*>?) { }
@@ -154,7 +120,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun init() {
-        mainViewModel = ViewModelProvider(this, MainViewModel.Factory(application)).get(MainViewModel::class.java)
+        viewModel = ViewModelProvider(this, MainViewModel.Factory(application)).get(MainViewModel::class.java)
 
         binding.apply {
             recyclerView.apply {
@@ -165,33 +131,31 @@ class MainActivity : AppCompatActivity() {
             swipeRefreshLayout.setOnRefreshListener {
                 showLoadingScreen(true)
 
-                mainViewModel.refreshCoinInfos().subscribe(
-                        {
-                            mainAdapter.apply {
-                                coinInfos = it
-                                notifyDataSetChanged()
-                            }
-                            showLoadingScreen(false)
-                        },
-                        { println("response error in refreshCoinInfos(): ${it.message}") }
-                )
+                viewModel.refreshCoinInfos()
+
                 swipeRefreshLayout.isRefreshing = false
             }
         }
 
-        mainViewModel.getNews().observe(this, { news ->
+        // 3초마다 받아오는 기능 만들 때 레이아웃 초기화되는 거 없애야 한다
+        viewModel.getCoinInfos().observe(this, { coinInfos ->
+            mainAdapter.coinInfos = coinInfos
+            mainAdapter.notifyDataSetChanged()
+            showLoadingScreen(false)
+        })
+
+        viewModel.getNews().observe(this, { news ->
             openNewsDialog(news)
         })
     }
 
-    fun changeLayout(exchange: String) = supportActionBar!!
+    fun changeLayout(position: Int) = supportActionBar!!
             .setBackgroundDrawable(
                     ColorDrawable(
-                            when (exchange) {
-                                "Coinone" -> 0xFF0079FE.toInt()
-                                "Bithumb" -> 0xFFF37321.toInt()
-                                "Upbit" -> 0xFF073686.toInt()
-                                else -> 0xFF1C2143.toInt() // huobi
+                            when (position) {
+                                0 -> Color.rgb(0, 121, 254)
+                                1 -> Color.rgb(243, 115, 33)
+                                else -> Color.rgb(7, 54, 134) // 2
                             }
                     )
             )
@@ -201,7 +165,7 @@ class MainActivity : AppCompatActivity() {
 
         supportFragmentManager
                 .beginTransaction()
-                .add(R.id.constraintLayout, PreferencesFragment())
+                .add(R.id.constraintLayout, PreferencesFragment(application))
                 .addToBackStack(null)
                 .commit()
     }
@@ -209,6 +173,7 @@ class MainActivity : AppCompatActivity() {
     fun backToMainActivity() {
         supportActionBar!!.setDisplayHomeAsUpEnabled(false)
 
+        showLoadingScreen(true)
         supportFragmentManager.popBackStack()
     }
 
@@ -237,6 +202,21 @@ class MainActivity : AppCompatActivity() {
                 isIndeterminate = false
                 visibility = View.GONE
             }
+        }
+    }
+
+    private fun openPreferencesDialog() {
+        val preferencesDialog = PreferencesDialog(this)
+        preferencesDialog.apply {
+            window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setOnDismissListener {
+                when (preferencesDialog.mode) {
+
+                    1 -> openOptionFragment()
+                }
+            }
+            setCancelable(true)
+            show()
         }
     }
 

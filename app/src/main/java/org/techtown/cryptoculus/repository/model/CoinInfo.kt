@@ -11,7 +11,6 @@ class CoinInfo {
     var coinName = "" // 가공 후 저장되는 종목 코드
     var coinViewCheck = true
 
-    // 얘는 새로 받아서 넣기만 하면 된다
-    @Ignore
-    var ticker = Ticker()
+    // 이건 새로 받아서 넣기만 하면 된다
+    @Ignore var ticker = Ticker()
 }

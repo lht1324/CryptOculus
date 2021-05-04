@@ -6,12 +6,15 @@
     <string name="high">고가: </string>
     <string name="low">저가: </string>
     <string name="volume">거래량: </string>
+    <string name="changeRate">전일종가 대비: </string>
     <string name="news0">신규 상장</string>
     <string name="news1">상장 폐지</string>
     <string name="spinner">Action Bar Spinner</string>
     <string name="search">검색</string>
     <string name="option">옵션</string>
     <string name="help" >도움말</string>
+    <string name="chooseSorting">정렬</string>
+    <string name="chooseCoin">보고 싶은 코인 선택</string>
     <string name="BTC">비트코인</string>
     <string name="BCH">비트코인 캐시</string>
     <string name="EOS">이오스</string>

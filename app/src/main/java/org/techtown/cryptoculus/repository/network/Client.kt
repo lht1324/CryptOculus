@@ -18,8 +18,7 @@ class Client {
         return when (exchange) {
             "Coinone" -> getService("https://api.coinone.co.kr/").getCoinone("all")
             "Bithumb" -> getService("https://api.bithumb.com/").getBithumb()
-            "Upbit" -> getService("https://api.upbit.com/v1/").getUpbit(getMarketsUpbit()) as Single<Response<Any>>
-            else -> getService("https://api-cloud.huobi.co.kr/").getHuobi() as Single<Response<Any>>
+            else -> getService("https://api.upbit.com/v1/").getUpbit(getMarketsUpbit()) as Single<Response<Any>>
         }
     }
 

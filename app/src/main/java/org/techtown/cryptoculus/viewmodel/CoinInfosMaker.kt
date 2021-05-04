@@ -13,14 +13,14 @@ import java.text.DecimalFormat
 import kotlin.math.roundToInt
 
 object CoinInfosMaker {
-    // coinone -> "btc": toUpperCase()
-    // bithumb -> "BTC"
-    // upbit -> "KRW-BTC": "KRW-"를 삭제
-    // huobi -> "krwbtc": "krw" 삭제 후 toUpperCase()
+    // Coinone -> "btc": toUpperCase()
+    // Bithumb -> "BTC"
+    // Upbit -> "KRW-BTC": "KRW-"를 삭제
     fun maker(exchange: String, response: Any): ArrayList<CoinInfo> {
         val coinInfos = ArrayList<CoinInfo>()
         lateinit var formatterPrice: DecimalFormat
         lateinit var formatterVolume: DecimalFormat
+        lateinit var formatterChangeRate: DecimalFormat
 
         when (exchange) {
             "Coinone" -> {
@@ -41,6 +41,7 @@ object CoinInfosMaker {
                                 DecimalFormat("###,###")
 
                     formatterVolume = DecimalFormat("###,##0.00")
+                    formatterChangeRate = DecimalFormat("###,##0.00")
 
                     coinInfo.apply {
                         this.exchange = exchange
@@ -50,6 +51,7 @@ object CoinInfosMaker {
                             highInTicker = formatterPrice.format(tickerTemp.high.toDouble())
                             lowInTicker = formatterPrice.format(tickerTemp.low.toDouble())
                             volumeInTicker = formatterVolume.format(tickerTemp.volume.toDouble())
+                            changeRate = formatterChangeRate.format((tickerTemp.last.toDouble() - tickerTemp.yesterdayLast.toDouble()) / tickerTemp.yesterdayLast.toDouble() * 100.0)
                         }
                         coinNameOriginal = coinNameOriginals[i]
                         coinName = coinNameOriginals[i].toUpperCase()
@@ -57,6 +59,7 @@ object CoinInfosMaker {
                     coinInfos.add(coinInfo)
                 }
             }
+
             "Bithumb" -> {
                 val gson = Gson()
                 val jsonObject = JSONObject(response.toString().replace("TRUE", "TRUETEMP")).getJSONObject("data")
@@ -76,6 +79,7 @@ object CoinInfosMaker {
                             DecimalFormat("###,###")
 
                         formatterVolume = DecimalFormat("###,##0.00")
+                        formatterChangeRate = DecimalFormat("###,##0.00")
 
                         ticker!!.apply {
                             firstInTicker = formatterPrice.format(tickerTemp.openingPrice.toDouble())
@@ -83,6 +87,7 @@ object CoinInfosMaker {
                             highInTicker = formatterPrice.format(tickerTemp.maxPrice.toDouble())
                             lowInTicker = formatterPrice.format(tickerTemp.minPrice.toDouble())
                             volumeInTicker = formatterVolume.format(tickerTemp.unitsTraded.toDouble())
+                            changeRate = formatterChangeRate.format((tickerTemp.closingPrice.toDouble() - tickerTemp.prevClosingPrice.toDouble()) / tickerTemp.prevClosingPrice.toDouble() * 100.0)
                         }
 
                         if (coinNameOriginals[i] == "TRUETEMP") {
@@ -97,6 +102,7 @@ object CoinInfosMaker {
                     coinInfos.add(coinInfo)
                 }
             }
+
             "Upbit" -> { // ArrayList<TickerUpbit>
                 val tickers = response as ArrayList<TickerUpbit>
 
@@ -109,6 +115,7 @@ object CoinInfosMaker {
                         DecimalFormat("###,###")
 
                     formatterVolume = DecimalFormat("###,##0.000")
+                    formatterChangeRate = DecimalFormat("###,##0.00")
 
                     coinInfo.apply {
                         this.exchange = exchange
@@ -118,43 +125,10 @@ object CoinInfosMaker {
                             highInTicker = formatterPrice.format(tickers[i].highPrice.toDouble())
                             lowInTicker = formatterPrice.format(tickers[i].lowPrice.toDouble())
                             volumeInTicker = formatterVolume.format(tickers[i].tradeVolume.toDouble())
+                            changeRate = formatterChangeRate.format((tickers[i].tradePrice.toDouble() - tickers[i].prevClosingPrice.toDouble()) / tickers[i].prevClosingPrice.toDouble() * 100.0)
                         }
                         coinNameOriginal = tickers[i].market
                         coinName = tickers[i].market.replace("KRW-", "")
-                    }
-                    coinInfos.add(coinInfo)
-                }
-            }
-            "Huobi" -> { // huobi
-                val tickersTemp = (response as Huobi).data
-                var tickers = ArrayList<TickerHuobi>()
-
-                for (i in tickersTemp.indices)
-                    if (tickersTemp[i].symbol.contains("krw"))
-                        tickers.add(tickersTemp[i])
-
-                for (i in tickers.indices) {
-                    val coinInfo = CoinInfo()
-
-                    formatterPrice = if (tickers[i].close.toDouble() - tickers[i].close.toDouble().roundToInt() != 0.0)
-                        DecimalFormat("###,##0.00")
-                    else
-                        DecimalFormat("###,###")
-
-                    formatterVolume = DecimalFormat("###,##0.000")
-
-                    coinInfo.apply {
-                        this.exchange = exchange
-                        ticker.apply {
-                            firstInTicker = formatterPrice.format(tickers[i].open.toDouble())
-                            lastInTicker = formatterPrice.format(tickers[i].close.toDouble())
-                            highInTicker = formatterPrice.format(tickers[i].high.toDouble())
-                            lowInTicker = formatterPrice.format(tickers[i].low.toDouble())
-                            volumeInTicker = formatterVolume.format(tickers[i].amount.toDouble())
-                        }
-                        coinNameOriginal = tickers[i].symbol
-                        coinName = tickers[i].symbol.replace("krw", "").toUpperCase()
-                        // DB랑 비교해서 다르면 news.value를 변경
                     }
                     coinInfos.add(coinInfo)
                 }

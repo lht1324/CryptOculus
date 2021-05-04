@@ -3,13 +3,21 @@ package org.techtown.cryptoculus.repository.model
 import android.content.SharedPreferences
 
 interface SavedPreferences {
-    fun getBoolean(key: String, default: Boolean): Boolean
+    fun getRestartApp(): Boolean
 
-    fun getString(key: String, default: String): String
+    fun putRestartApp(value: Boolean)
+
+    fun getExchange(): String
+
+    fun putExchange(value: String)
 }
 
-class AndroidPreferences(private val preferences: SharedPreferences) : SavedPreferences {
-    override fun getBoolean(key: String, default: Boolean) = preferences.getBoolean(key, default)
+class Preferences(private val preferences: SharedPreferences) : SavedPreferences {
+    override fun getRestartApp() = preferences.getBoolean("restartApp", false)
 
-    override fun getString(key: String, default: String) = preferences.getString(key, default)!!
+    override fun putRestartApp(value: Boolean) = preferences.edit().putBoolean("restartApp", value).apply()
+
+    override fun getExchange() = preferences.getString("exchange", "Coinone")!!
+
+    override fun putExchange(value: String)= preferences.edit().putString("exchange", value).apply()
 }

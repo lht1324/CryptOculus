@@ -8,15 +8,27 @@ import retrofit2.Response
 interface Repository {
     fun getData(exchange: String): Single<Response<Any>>
 
-    fun getAllByExchange(exchange: String): ArrayList<CoinInfo>
+    fun getAllByExchangeAsSingle(exchange: String): Single<List<CoinInfo>>
+
+    fun getAllByExchange(exchange: String): List<CoinInfo>
+
+    fun getCoinInfo(exchange: String, coinName: String): CoinInfo
 
     fun insert(coinInfo: CoinInfo): Observable<Unit>
 
-    fun insertAll(coinInfos: ArrayList<CoinInfo>): Observable<Unit>
+    fun insertAll(coinInfos: List<CoinInfo>): Observable<Unit>
 
     fun update(coinInfo: CoinInfo): Observable<Unit>
 
-    fun updateAll(coinInfos: ArrayList<CoinInfo>): Observable<Unit>
+    fun updateAll(coinInfos: List<CoinInfo>): Observable<Unit>
 
     fun delete(coinInfo: CoinInfo): Observable<Unit>
+
+    fun getRestartApp(): Boolean
+
+    fun getExchange(): String
+
+    fun putRestartApp(restartApp: Boolean)
+
+    fun putExchange(exchange: String)
 }

@@ -6,8 +6,6 @@ import com.google.gson.annotations.SerializedName
 data class TickerCoinone(
     @SerializedName("currency")
     val currency: String,
-    @SerializedName("errorCode")
-    val errorCode: String,
     @SerializedName("first")
     val first: String,
     @SerializedName("high")
@@ -16,18 +14,8 @@ data class TickerCoinone(
     val last: String,
     @SerializedName("low")
     val low: String,
-    @SerializedName("result")
-    val result: String,
-    @SerializedName("volume")
-    val volume: String,
-    @SerializedName("yesterday_first")
-    val yesterdayFirst: String,
-    @SerializedName("yesterday_high")
-    val yesterdayHigh: String,
     @SerializedName("yesterday_last")
     val yesterdayLast: String,
-    @SerializedName("yesterday_low")
-    val yesterdayLow: String,
-    @SerializedName("yesterday_volume")
-    val yesterdayVolume: String
+    @SerializedName("volume")
+    val volume: String
 ) : Ticker()

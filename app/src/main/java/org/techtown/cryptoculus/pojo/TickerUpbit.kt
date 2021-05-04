@@ -12,6 +12,8 @@ data class TickerUpbit(
         val highPrice: String,
         @SerializedName("low_price")
         val lowPrice: String,
+        @SerializedName("prev_closing_price")
+        val prevClosingPrice: String,
         @SerializedName("acc_trade_volume_24h")
         val tradeVolume: String
 ) : Ticker()

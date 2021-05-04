@@ -12,15 +12,15 @@ import kotlin.collections.ArrayList
 
 class PreferencesAdapter : RecyclerView.Adapter<PreferencesAdapter.ViewHolder>() {
     var coinInfos = ArrayList<CoinInfo>()
-    val clickedItem = MutableLiveData<CoinInfo>()
+    val clickedItem = MutableLiveData<String>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         val binding = ItemOptionBinding.inflate(inflater, parent, false)
 
         return ViewHolder(binding,
-            onItemClicked = { coinInfo ->
-                clickedItem.value = coinInfo
+            onItemClicked = { coinName ->
+                clickedItem.value = coinName
             }
         )
     }
@@ -32,7 +32,7 @@ class PreferencesAdapter : RecyclerView.Adapter<PreferencesAdapter.ViewHolder>()
     override fun getItemCount() = coinInfos.size
 
     inner class ViewHolder(private val binding: ItemOptionBinding,
-        private val onItemClicked: (CoinInfo) -> Unit) : RecyclerView.ViewHolder(binding.root) {
+        private val onItemClicked: (String) -> Unit) : RecyclerView.ViewHolder(binding.root) {
         fun bind(coinInfo: CoinInfo, position: Int) = binding.apply {
                 viewHolder = this@ViewHolder
                 this.coinInfo = coinInfo
@@ -56,7 +56,7 @@ class PreferencesAdapter : RecyclerView.Adapter<PreferencesAdapter.ViewHolder>()
         fun changeCoinView(coinViewCheck: Boolean, position: Int) {
             coinInfos[position].coinViewCheck = !coinViewCheck
             binding.checkedTextView.toggle()
-            onItemClicked(coinInfos[position])
+            onItemClicked(coinInfos[position].coinName)
             // 여기서 뷰모델 업데이트도 해 줄까?
             // onItemClicked해서 클릭된 거 업데이트 하면 되잖아
         }

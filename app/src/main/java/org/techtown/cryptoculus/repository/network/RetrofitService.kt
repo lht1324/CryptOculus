@@ -22,11 +22,7 @@ interface RetrofitService {
     // https://api.upbit.com/v1/ticker?markets=... (Ticker)
     @GET("market/all")
     fun getMarketsUpbit(): Call<ArrayList<UpbitMarket>>
-    // fun getMarketsUpbit(): Call<Any>
+
     @GET("ticker?")
     fun getUpbit(@Query("markets") markets: String?): Single<Response<ArrayList<TickerUpbit>>>
-
-    // https://api-cloud.huobi.co.kr/market/tickers
-    @GET("market/tickers")
-    fun getHuobi(): Single<Response<Huobi>>
 }
