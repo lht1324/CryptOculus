@@ -26,9 +26,13 @@ interface Repository {
 
     fun getRestartApp(): Boolean
 
-    fun getExchange(): String
-
     fun putRestartApp(restartApp: Boolean)
 
+    fun getExchange(): String
+
     fun putExchange(exchange: String)
+
+    fun getSortMode(): Int
+
+    fun putSortMode(sortMode: Int)
 }

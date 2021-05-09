@@ -3,20 +3,29 @@ package org.techtown.cryptoculus.view
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
+import android.app.Application
+import android.content.Context
 import android.graphics.Color
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Filter
+import android.widget.Filterable
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.databinding.ItemCoinBinding
 import org.techtown.cryptoculus.repository.model.CoinInfo
+import org.techtown.cryptoculus.viewmodel.MainViewModel
+import org.techtown.cryptoculus.viewmodel.SortingViewModel
 import java.util.*
 import kotlin.collections.ArrayList
 
-class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
+class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdapter.ViewHolder>(), Filterable {
     var coinInfos = ArrayList<CoinInfo>()
+    var filteredCoinInfos = ArrayList<CoinInfo>()
+    var sortMode = 0
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -26,17 +35,17 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
     }
 
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-        if (coinInfos[position].coinViewCheck)
-            viewHolder.bind(coinInfos[position])
+        if (filteredCoinInfos[position].coinViewCheck)
+            viewHolder.bind(filteredCoinInfos[position], position)
     }
 
-    override fun getItemCount(): Int = coinInfos.size
+    override fun getItemCount() = filteredCoinInfos.size
 
     inner class ViewHolder(
         private val binding: ItemCoinBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(coinInfo: CoinInfo) = binding.apply {
+        fun bind(coinInfo: CoinInfo, position: Int) = binding.apply {
             viewHolder = this@ViewHolder
             this.coinInfo = coinInfo
 
@@ -104,5 +113,47 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
         }
     }
 
-    fun println(data: String) = Log.d("MainAdapter", data)
+    // 검색 상태에서 정렬을 하면 꼬인다
+    // filteredCoinInfos.size == coinInfos.size에서만 정렬 변경 가능하게 해야 하나?
+    override fun getFilter() = object : Filter() {
+        override fun performFiltering(constraint: CharSequence): FilterResults {
+            val charString = constraint.toString()
+            filteredCoinInfos = if (charString.isEmpty())
+                coinInfos
+            else {
+                val filteredList = ArrayList<CoinInfo>()
+
+                if (coinInfos.isNotEmpty()) {
+                    for (i in coinInfos.indices) {
+                        val id = mContext.resources.getIdentifier(
+                            coinInfos[i].coinName,
+                            "string",
+                            "org.techtown.cryptoculus"
+                        )
+                        val coinNameKorean = if (id != 0) mContext.resources.getString(id)
+                        else "신규 상장"
+
+                        if("${coinInfos[i].coinName} / $coinNameKorean".toLowerCase().contains(charString.toLowerCase()))
+                            filteredList.add(coinInfos[i])
+                    }
+                }
+                filteredList
+            }
+            val filterResults = FilterResults()
+            filterResults.values = filteredCoinInfos
+            return filterResults
+        }
+
+        override fun publishResults(constraint: CharSequence, results: FilterResults) {
+            filteredCoinInfos  = results.values as ArrayList<CoinInfo>
+            notifyDataSetChanged()
+        }
+    }
+
+    fun setItems(coinInfos: ArrayList<CoinInfo>) {
+        this.coinInfos = coinInfos
+        filteredCoinInfos = coinInfos
+    }
+
+    private fun println(data: String) = Log.d("MainAdapter", data)
 }

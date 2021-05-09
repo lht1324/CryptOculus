@@ -10,6 +10,10 @@ interface SavedPreferences {
     fun getExchange(): String
 
     fun putExchange(value: String)
+
+    fun getSortMode(): Int
+
+    fun putSortMode(value: Int)
 }
 
 class Preferences(private val preferences: SharedPreferences) : SavedPreferences {
@@ -19,5 +23,9 @@ class Preferences(private val preferences: SharedPreferences) : SavedPreferences
 
     override fun getExchange() = preferences.getString("exchange", "Coinone")!!
 
-    override fun putExchange(value: String)= preferences.edit().putString("exchange", value).apply()
+    override fun putExchange(value: String) = preferences.edit().putString("exchange", value).apply()
+
+    override fun getSortMode() = preferences.getInt("sortMode", 0)
+
+    override fun putSortMode(value: Int) = preferences.edit().putInt("sortMode", value).apply()
 }

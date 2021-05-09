@@ -79,6 +79,13 @@ class PreferencesViewModel(application: Application) : ViewModel() {
         update(coinInfoTemp)
     }
 
+    fun updateCoinViewChecks() {
+        val coinInfosTemp = repository.getAllByExchange(repository.getExchange())
+        // 종료할 때 한꺼번에 받아온 다음에
+        // 넘겨주는 건 안 돼?
+        // 기본 정보는 coinInfosTemp에 있으니까 coinViewCheck만 전부 바꿔주면 되잖아
+   }
+
     fun getCoinInfo(exchange: String, coinName: String) = repository.getCoinInfo(exchange, coinName)
 
     fun update(coinInfo: CoinInfo) = repository.update(coinInfo)

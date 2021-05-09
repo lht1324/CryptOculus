@@ -5,6 +5,8 @@ import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.StrictMode
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.*
 import android.widget.AdapterView
@@ -12,7 +14,6 @@ import android.widget.ArrayAdapter
 import android.widget.ListPopupWindow
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.AppCompatSpinner
 import androidx.databinding.DataBindingUtil
@@ -21,22 +22,24 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.databinding.ActivityMainBinding
 import org.techtown.cryptoculus.viewmodel.MainViewModel
+import org.techtown.cryptoculus.viewmodel.SortingViewModel
 
 class MainActivity : AppCompatActivity() {
     // 고칠 것
+    // 파일 저장 권한
     // 터치한 곳에 버튼 넣어서 거래소 차트로 연결해주기
-    // 검색
-    // 정렬
+    // 자동으로 새로 받아오기
+    // coinViewCheck 저장
     private lateinit var binding: ActivityMainBinding
     private lateinit var callback: OnBackPressedCallback
     private val mainAdapter: MainAdapter by lazy {
-        MainAdapter()
+        MainAdapter(this)
     }
     private var backPressedLast: Long = 0
-    lateinit var viewModel: MainViewModel
+    lateinit var mainViewModel: MainViewModel
+    lateinit var sortingViewModel: SortingViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        println("onCreate() is executed.")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -91,16 +94,17 @@ class MainActivity : AppCompatActivity() {
             dropDownWidth = ListPopupWindow.WRAP_CONTENT
             adapter = ArrayAdapter(
                     this@MainActivity,
-                    R.layout.item_spinner,
+                    R.layout.item_spinner_actionbar,
                     arrayOf("Coinone", "Bithumb", "Upbit"))
 
-            setSelection(viewModel.getSelection())
+            // onItemSelectedListener 자동 실행 방지를 위해 animate를 false로
+            setSelection(mainViewModel.getSelection(), false)
+            changeLayout(mainViewModel.getSelection())
 
             onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(p0: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                    showLoadingScreen(true)
+                    changeExchange(position)
                     changeLayout(position)
-                    viewModel.changeExchange(position)
                 }
 
                 override fun onNothingSelected(p0: AdapterView<*>?) { }
@@ -112,7 +116,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.option -> openOptionFragment()
+            R.id.option -> openPreferencesDialog()
             // R.id.help -> { }
         }
 
@@ -120,7 +124,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun init() {
-        viewModel = ViewModelProvider(this, MainViewModel.Factory(application)).get(MainViewModel::class.java)
+        mainViewModel = ViewModelProvider(this, MainViewModel.Factory(application)).get(MainViewModel::class.java)
+        sortingViewModel = ViewModelProvider(this, SortingViewModel.Factory(application)).get(SortingViewModel::class.java)
 
         binding.apply {
             recyclerView.apply {
@@ -129,22 +134,34 @@ class MainActivity : AppCompatActivity() {
             }
 
             swipeRefreshLayout.setOnRefreshListener {
-                showLoadingScreen(true)
-
-                viewModel.refreshCoinInfos()
-
+                getData()
                 swipeRefreshLayout.isRefreshing = false
             }
+
+            editText.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+
+                override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+                    mainAdapter.filter.filter(p0)
+                    mainAdapter.filteredCoinInfos = sortingViewModel.sortCoinInfos(mainAdapter.filteredCoinInfos)
+                }
+
+                override fun afterTextChanged(p0: Editable?) {}
+
+            })
         }
 
         // 3초마다 받아오는 기능 만들 때 레이아웃 초기화되는 거 없애야 한다
-        viewModel.getCoinInfos().observe(this, { coinInfos ->
-            mainAdapter.coinInfos = coinInfos
+        mainViewModel.getCoinInfos().observe(this, { coinInfos ->
+            for (i in coinInfos.indices)
+                println("coinInfos[$i].coinViewCheck = ${coinInfos[i].coinViewCheck}")
+            binding.editText.text.clear()
+            mainAdapter.setItems(sortingViewModel.sortCoinInfos(coinInfos))
             mainAdapter.notifyDataSetChanged()
             showLoadingScreen(false)
         })
 
-        viewModel.getNews().observe(this, { news ->
+        mainViewModel.getNews().observe(this, { news ->
             openNewsDialog(news)
         })
     }
@@ -160,7 +177,7 @@ class MainActivity : AppCompatActivity() {
                     )
             )
 
-    private fun openOptionFragment() {
+    private fun openPreferencesFragment() {
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
         supportFragmentManager
@@ -186,9 +203,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun openPreferencesDialog() = PreferencesDialog(this, mainViewModel.getSortMode()).apply {
+        setOnDismissListener {
+            if (mode == 1)
+                openPreferencesFragment()
+        }
+        setCancelable(true)
+        show()
+        sortModeLiveData.observe(this@MainActivity, {
+            if (it != mainViewModel.getSortMode())
+                updateSortMode(it)
+        })
+    }
+
     private fun showLoadingScreen(show: Boolean) = binding.apply {
         if (show) {
-            constraintLayout.visibility = View.GONE
+            swipeRefreshLayout.visibility = View.GONE
 
             progressBar.apply {
                 isIndeterminate = true
@@ -196,7 +226,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         else {
-            constraintLayout.visibility = View.VISIBLE
+            swipeRefreshLayout.visibility = View.VISIBLE
 
             progressBar.apply {
                 isIndeterminate = false
@@ -205,19 +235,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun openPreferencesDialog() {
-        val preferencesDialog = PreferencesDialog(this)
-        preferencesDialog.apply {
-            window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            setOnDismissListener {
-                when (preferencesDialog.mode) {
+    private fun getData() {
+        showLoadingScreen(true)
+        mainViewModel.getData()
+    }
 
-                    1 -> openOptionFragment()
-                }
-            }
-            setCancelable(true)
-            show()
-        }
+    private fun updateSortMode(sortMode: Int) {
+        showLoadingScreen(true)
+        binding.recyclerView.adapter = mainAdapter
+        mainViewModel.updateSortMode(sortMode)
+    }
+
+    private fun changeExchange(position: Int) {
+        showLoadingScreen(true)
+        binding.recyclerView.adapter = mainAdapter // 리사이클러뷰 거래소 첫 부분부터 보여주기
+        mainViewModel.changeExchange(position)
     }
 
     private fun println(data: String) = Log.d("MainAcitivity", data)

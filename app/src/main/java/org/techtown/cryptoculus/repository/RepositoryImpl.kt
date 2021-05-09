@@ -12,11 +12,8 @@ class RepositoryImpl(private val application: Application) : Repository{
         CoinInfoDatabase.getInstance(application)!!.coinInfoDao()
     }
     // MODE_PRIVATE
-    private val restartAppPreferences by lazy {
-        application.getSharedPreferences("restartApp", 0)
-    }
-    private val exchangePreferences by lazy {
-        application.getSharedPreferences("exchange", 0)
+    private val preferences by lazy {
+        Preferences(application.getSharedPreferences("preferences", 0))
     }
 
     override fun getData(exchange: String) = Client().getData(exchange)
@@ -39,13 +36,17 @@ class RepositoryImpl(private val application: Application) : Repository{
 
     override fun delete(coinInfo: CoinInfo) = template { coinInfoDao.delete(coinInfo) }
 
-    override fun getRestartApp() = Preferences(restartAppPreferences).getRestartApp()
+    override fun getRestartApp() = preferences.getRestartApp()
 
-    override fun putRestartApp(restartApp: Boolean) = Preferences(restartAppPreferences).putRestartApp(restartApp)
+    override fun putRestartApp(restartApp: Boolean) = preferences.putRestartApp(restartApp)
 
-    override fun getExchange() = Preferences(exchangePreferences).getExchange()
+    override fun getExchange() = preferences.getExchange()
 
-    override fun putExchange(exchange: String) = Preferences(exchangePreferences).putExchange(exchange)
+    override fun putExchange(exchange: String) = preferences.putExchange(exchange)
+
+    override fun getSortMode() = preferences.getSortMode()
+
+    override fun putSortMode(sortMode: Int) = preferences.putSortMode(sortMode)
 
     private fun template(argFun: () -> Unit) = Observable.fromCallable { argFun() }
             .subscribeOn(Schedulers.io())

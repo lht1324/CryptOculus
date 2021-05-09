@@ -17,13 +17,6 @@ class MainViewModel(application: Application) : ViewModel(){
     private val repository by lazy {
         RepositoryImpl(application)
     }
-    private var restartApp = repository.getRestartApp()
-    private var exchange = repository.getExchange()
-    private var sortMode = repository.getExchange() // 얘도 저장해야 해
-
-    fun getCoinInfos() = coinInfos
-
-    fun getNews() = news
 
     class Factory(private val application: Application) : ViewModelProvider.Factory {
         override fun <T : ViewModel?> create(modelClass: Class<T>): T {
@@ -31,61 +24,53 @@ class MainViewModel(application: Application) : ViewModel(){
         }
     }
 
+    fun getCoinInfos() = coinInfos
+
+    fun getNews() = news
+
+    fun getSortMode() = repository.getSortMode()
+
+    init {
+        getData()
+    }
+
     override fun onCleared() {
         compositeDisposable.dispose()
-        putExchange()
-        if (!restartApp)
-            putRestartApp()
+        if (!repository.getRestartApp())
+            repository.putRestartApp(true)
         super.onCleared()
     }
 
-    private fun getData(exchange: String) = addDisposable(repository.getData(exchange)
+    fun getData() {
+        val exchange = repository.getExchange()
+
+        addDisposable(repository.getData(exchange)
             .map {
-                this.exchange = exchange
                 val coinInfosNew = CoinInfosMaker.maker(exchange, it.body()!!)
 
-                if (restartApp) {
-                    // News
-                    if (repository.getAllByExchange(exchange).isNotEmpty()) {
-                        val coinInfosOld = ArrayList(repository.getAllByExchange(exchange))
-                        val coinViewChecks = ArrayList<Boolean>()
+                // News
+                if (repository.getRestartApp() && repository.getAllByExchange(exchange).isNotEmpty()) {
+                    val coinInfosOld = ArrayList(repository.getAllByExchange(exchange))
+                    val coinViewChecks = ArrayList<Boolean>()
 
-                        for (i in coinInfosOld)
-                            coinViewChecks.add(i.coinViewCheck)
+                    for (i in coinInfosOld)
+                        coinViewChecks.add(i.coinViewCheck)
 
-                        if (coinInfosOld.containsAll(coinInfosNew) || coinInfosNew.containsAll(coinInfosOld))
-                            compareCoinInfos(coinInfosNew, exchange)
-                    }
+                    if (coinInfosOld.containsAll(coinInfosNew) || coinInfosNew.containsAll(coinInfosOld))
+                        compareCoinInfos(coinInfosNew, exchange)
                 }
-                coinInfosNew.sortWith { o1, o2 ->
-                    // o1.ticker.changeRate.toDouble().compareTo(o2.ticker.changeRate.toDouble())
-                    o2.ticker.changeRate.toDouble().compareTo(o1.ticker.changeRate.toDouble())
-                }
-                // 이름, 현재가
-                // savedCoinInfos = CoinInfosMaker.maker(exchange, it.body()!!)
-                /* coinInfosNew.sortWith { o1, o2 ->
-                    o1.coinName.compareTo(o2.coinName) // 오름차순
-                    // o2.coinName.compareTo(o1.coinName) // 내림차순
-                }
-                coinInfosNew.sortWith { o1, o2 ->
-                    // o1.ticker.changeRate.toDouble().compareTo(o2.ticker.changeRate.toDouble())
-                    o2.ticker.changeRate.toDouble().compareTo(o1.ticker.changeRate.toDouble())
-                }
-                coinInfosNew.sortWith { o1, o2 ->
-                    // o1.ticker.lastInTicker.replace(",", "").toDouble().compareTo(o2.ticker.lastInTicker.replace(",", "").toDouble()) // 오름차순
-                    o2.ticker.lastInTicker.replace(",", "").toDouble().compareTo(o1.ticker.lastInTicker.replace(",", "").toDouble()) // 내림차순
-                } */
+
                 coinInfosNew
             }.subscribe(
-                    {
-                        // restartApp만 하면 되는 게 아니라 DB가 비었는지도 알아야 한다
-                        if (restartApp && repository.getAllByExchange(exchange).isNotEmpty())
-                            updateAll(it.toList()) { coinInfos.value = it }
-                        else
-                            insertAll(it.toList()) { coinInfos.value = it }
-                    },
-                    { println("response error in getData(\"${exchange}\"): ${it.message}") }
+                {
+                    if (repository.getRestartApp() && repository.getAllByExchange(exchange).isNotEmpty())
+                        updateAll(it.toList()) { coinInfos.value = it }
+                    else
+                        insertAll(it.toList()) { coinInfos.value = it }
+                },
+                { println("response error in getData(\"${exchange}\"): ${it.message}") }
             ))
+    }
 
     private fun compareCoinInfos(coinInfosNew: ArrayList<CoinInfo>, exchange: String) {
         val coinInfosOld = ArrayList(repository.getAllByExchange(exchange))
@@ -145,27 +130,29 @@ class MainViewModel(application: Application) : ViewModel(){
     private fun delete(coinInfo: CoinInfo) = addDisposable(repository.delete(coinInfo)
             .subscribe { })
 
-    fun refreshCoinInfos() = getData(exchange)
-
     fun changeExchange(position: Int) {
-        exchange = when (position) {
+        repository.putExchange(when (position) {
             0 -> "Coinone"
             1 -> "Bithumb"
             else -> "Upbit" // 2
-        }
-        putExchange()
-        getData(exchange)
+        })
+        getData()
     }
 
-    fun getSelection() = when (exchange) {
+    fun updateSortMode(sortMode: Int) {
+        putSortMode(sortMode)
+        getData()
+    }
+
+    fun getSelection() = when (repository.getExchange()) {
         "Coinone" -> 0
         "Bithumb" -> 1
         else -> 2
     }
 
-    private fun putExchange() = repository.putExchange(exchange)
+    private fun putRestartApp(restartApp: Boolean) = repository.putRestartApp(restartApp)
 
-    private fun putRestartApp() = repository.putRestartApp(true)
+    private fun putSortMode(sortMode: Int) = repository.putSortMode(sortMode)
 
     private fun addDisposable(disposable: Disposable) = compositeDisposable.add(disposable)
 

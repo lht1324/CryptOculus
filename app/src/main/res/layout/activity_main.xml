@@ -27,20 +27,24 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
+            <View
+                android:id="@+id/line1"
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:background="#000000"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/editText" />
+
             <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
                 android:id="@+id/swipeRefreshLayout"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginLeft="20dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="20dp"
-                android:layout_marginRight="20dp"
-                android:layout_marginBottom="20dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/editText">
+                app:layout_constraintTop_toBottomOf="@id/line1">
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recyclerView"
@@ -50,6 +54,7 @@
 
                 </androidx.recyclerview.widget.RecyclerView>
             </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <ProgressBar
