@@ -51,10 +51,6 @@ class MainViewModel(application: Application) : ViewModel(){
                 // News
                 if (repository.getRestartApp() && repository.getAllByExchange(exchange).isNotEmpty()) {
                     val coinInfosOld = ArrayList(repository.getAllByExchange(exchange))
-                    val coinViewChecks = ArrayList<Boolean>()
-
-                    for (i in coinInfosOld)
-                        coinViewChecks.add(i.coinViewCheck)
 
                     if (coinInfosOld.containsAll(coinInfosNew) || coinInfosNew.containsAll(coinInfosOld))
                         compareCoinInfos(coinInfosNew, exchange)

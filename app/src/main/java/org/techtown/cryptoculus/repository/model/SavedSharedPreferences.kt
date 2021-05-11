@@ -2,7 +2,7 @@ package org.techtown.cryptoculus.repository.model
 
 import android.content.SharedPreferences
 
-interface SavedPreferences {
+interface SavedSharedPreferences {
     fun getRestartApp(): Boolean
 
     fun putRestartApp(value: Boolean)
@@ -16,7 +16,7 @@ interface SavedPreferences {
     fun putSortMode(value: Int)
 }
 
-class Preferences(private val preferences: SharedPreferences) : SavedPreferences {
+class SavedSharedPreferencesImpl(private val preferences: SharedPreferences) : SavedSharedPreferences {
     override fun getRestartApp() = preferences.getBoolean("restartApp", false)
 
     override fun putRestartApp(value: Boolean) = preferences.edit().putBoolean("restartApp", value).apply()

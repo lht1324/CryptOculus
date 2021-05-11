@@ -25,7 +25,6 @@ import kotlin.collections.ArrayList
 class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdapter.ViewHolder>(), Filterable {
     var coinInfos = ArrayList<CoinInfo>()
     var filteredCoinInfos = ArrayList<CoinInfo>()
-    var sortMode = 0
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -35,8 +34,7 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
     }
 
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-        if (filteredCoinInfos[position].coinViewCheck)
-            viewHolder.bind(filteredCoinInfos[position], position)
+        viewHolder.bind(filteredCoinInfos[position])
     }
 
     override fun getItemCount() = filteredCoinInfos.size
@@ -45,7 +43,7 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
         private val binding: ItemCoinBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(coinInfo: CoinInfo, position: Int) = binding.apply {
+        fun bind(coinInfo: CoinInfo) = binding.apply {
             viewHolder = this@ViewHolder
             this.coinInfo = coinInfo
 
@@ -113,11 +111,12 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
         }
     }
 
-    // 검색 상태에서 정렬을 하면 꼬인다
-    // filteredCoinInfos.size == coinInfos.size에서만 정렬 변경 가능하게 해야 하나?
     override fun getFilter() = object : Filter() {
         override fun performFiltering(constraint: CharSequence): FilterResults {
             val charString = constraint.toString()
+            println("filteredCoinInfos.size = ${filteredCoinInfos.size}")
+            println("coinInfos.size = ${coinInfos.size}")
+            // 둘 다 0이다
             filteredCoinInfos = if (charString.isEmpty())
                 coinInfos
             else {
@@ -151,8 +150,8 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
     }
 
     fun setItems(coinInfos: ArrayList<CoinInfo>) {
-        this.coinInfos = coinInfos
         filteredCoinInfos = coinInfos
+        this.coinInfos = coinInfos
     }
 
     private fun println(data: String) = Log.d("MainAdapter", data)

@@ -30,9 +30,8 @@ class Client {
             if (marketList[i].market.contains("KRW-"))
                 markets += "${marketList[i].market},"
         }
-        
-        markets = markets.substring(0, markets.lastIndex) // 마지막에 붙은 ',' 삭제
-        return markets
+
+        return markets.substring(0, markets.lastIndex) // 마지막에 붙은 ',' 삭제
     }
 
     private fun getService(baseUrl: String): RetrofitService = Retrofit.Builder()

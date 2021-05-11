@@ -19,7 +19,6 @@ class PreferencesViewModel(application: Application) : ViewModel() {
     }
     private val coinInfos = MutableLiveData<ArrayList<CoinInfo>>()
     private val checkAll = MutableLiveData<Boolean>()
-    private var savedCoinInfos = ArrayList<CoinInfo>()
     private var exchange = repository.getExchange()
 
     class Factory(private val application: Application) : ViewModelProvider.Factory {
@@ -49,11 +48,9 @@ class PreferencesViewModel(application: Application) : ViewModel() {
                     if (i == coinInfos.size - 1 && coinInfos[i].coinViewCheck)
                         checkAll.value = true
                 }
-                savedCoinInfos = ArrayList(coinInfos)
                 ArrayList(coinInfos)
             }.subscribe(
                     {
-                        println("coinInfos.size = ${it.size}")
                         coinInfos.value = it
                     },
                     { println("onFailure in getData(\"${exchange}\"): ${it.message}") }
@@ -63,16 +60,20 @@ class PreferencesViewModel(application: Application) : ViewModel() {
 
     fun getCheckAll() = checkAll
 
+    // 전체 체크 눌렀을 때
     @RequiresApi(Build.VERSION_CODES.N)
-    fun updateCoinViewChecks(checkAll: Boolean) {
-        savedCoinInfos.replaceAll {
+    fun updateCoinViewChecks(coinInfos: ArrayList<CoinInfo>, checkAll: Boolean): ArrayList<CoinInfo> {
+        coinInfos.replaceAll {
             it.coinViewCheck = !checkAll
             it
         }
-        updateAll(savedCoinInfos)
-        coinInfos.value = savedCoinInfos
+        updateAll(coinInfos)
+        // coinInfos.value = savedCoinInfos
+        // DB를 업데이트하면 그걸 자동으로 받아오는 게 되나?
+        return coinInfos
     }
 
+    // 하나만 체크 됐을 때
     fun updateCoinViewCheck(coinName: String) {
         val coinInfoTemp = getCoinInfo(exchange, coinName)
         coinInfoTemp.coinViewCheck = !coinInfoTemp.coinViewCheck

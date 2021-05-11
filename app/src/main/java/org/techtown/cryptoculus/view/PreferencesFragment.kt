@@ -67,7 +67,6 @@ class PreferencesFragment(private val application: Application) : Fragment() {
     @RequiresApi(Build.VERSION_CODES.N)
     private fun init() {
         viewModel = ViewModelProvider(this, PreferencesViewModel.Factory(application)).get(PreferencesViewModel::class.java)
-        preferencesAdapter.coinInfos
 
         binding.apply {
             recyclerView.apply {
@@ -82,11 +81,13 @@ class PreferencesFragment(private val application: Application) : Fragment() {
                 })
 
                 setOnClickListener {
-                    viewModel.updateCoinViewChecks(isChecked)
+                    preferencesAdapter.coinInfos = viewModel.updateCoinViewChecks(preferencesAdapter.coinInfos, isChecked)
+                    preferencesAdapter.notifyDataSetChanged()
                     checkedTextView.toggle()
                 }
             }
         }
+
         viewModel.getCoinInfos().observe(viewLifecycleOwner, {
             preferencesAdapter.coinInfos = it
             preferencesAdapter.notifyDataSetChanged()

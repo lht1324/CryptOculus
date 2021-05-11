@@ -103,6 +103,8 @@ class MainActivity : AppCompatActivity() {
 
             onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(p0: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    if (binding.editText.text.isNotEmpty())
+                        binding.editText.text.clear()
                     changeExchange(position)
                     changeLayout(position)
                 }
@@ -141,9 +143,13 @@ class MainActivity : AppCompatActivity() {
             editText.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
 
-                override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-                    mainAdapter.filter.filter(p0)
-                    mainAdapter.filteredCoinInfos = sortingViewModel.sortCoinInfos(mainAdapter.filteredCoinInfos)
+                override fun onTextChanged(charSequence: CharSequence?, p1: Int, p2: Int, p3: Int) {
+                    mainAdapter.apply {
+                        if (coinInfos.isNotEmpty()) { // 이 조건을 안 넣으면 비동기 처리 중이라서 어댑터 내의 Array가 비었을 때도 텍스트 변경을 관찰한다.
+                            filter.filter(charSequence)
+                            filteredCoinInfos = sortingViewModel.sortCoinInfos(filteredCoinInfos)
+                        }
+                    }
                 }
 
                 override fun afterTextChanged(p0: Editable?) {}
@@ -153,9 +159,7 @@ class MainActivity : AppCompatActivity() {
 
         // 3초마다 받아오는 기능 만들 때 레이아웃 초기화되는 거 없애야 한다
         mainViewModel.getCoinInfos().observe(this, { coinInfos ->
-            for (i in coinInfos.indices)
-                println("coinInfos[$i].coinViewCheck = ${coinInfos[i].coinViewCheck}")
-            binding.editText.text.clear()
+            // binding.editText.text.clear()
             mainAdapter.setItems(sortingViewModel.sortCoinInfos(coinInfos))
             mainAdapter.notifyDataSetChanged()
             showLoadingScreen(false)
@@ -195,6 +199,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openNewsDialog(news: ArrayList<Any>) = NewsDialog(this).apply {
+        println("openNewsDialog() is executed.")
         if (news[0] == "newList" || news[0] == "deList")
             news.add(news[1])
         else {

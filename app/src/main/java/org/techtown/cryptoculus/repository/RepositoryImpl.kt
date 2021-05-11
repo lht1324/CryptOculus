@@ -13,7 +13,7 @@ class RepositoryImpl(private val application: Application) : Repository{
     }
     // MODE_PRIVATE
     private val preferences by lazy {
-        Preferences(application.getSharedPreferences("preferences", 0))
+        SavedSharedPreferencesImpl(application.getSharedPreferences("preferences", 0))
     }
 
     override fun getData(exchange: String) = Client().getData(exchange)

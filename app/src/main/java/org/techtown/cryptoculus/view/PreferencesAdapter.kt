@@ -5,7 +5,7 @@ import android.view.ViewGroup
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import org.techtown.cryptoculus.R
-import org.techtown.cryptoculus.databinding.ItemOptionBinding
+import org.techtown.cryptoculus.databinding.ItemPreferencesBinding
 import org.techtown.cryptoculus.repository.model.CoinInfo
 import java.util.*
 import kotlin.collections.ArrayList
@@ -16,7 +16,7 @@ class PreferencesAdapter : RecyclerView.Adapter<PreferencesAdapter.ViewHolder>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
-        val binding = ItemOptionBinding.inflate(inflater, parent, false)
+        val binding = ItemPreferencesBinding.inflate(inflater, parent, false)
 
         return ViewHolder(binding,
             onItemClicked = { coinName ->
@@ -31,7 +31,7 @@ class PreferencesAdapter : RecyclerView.Adapter<PreferencesAdapter.ViewHolder>()
 
     override fun getItemCount() = coinInfos.size
 
-    inner class ViewHolder(private val binding: ItemOptionBinding,
+    inner class ViewHolder(private val binding: ItemPreferencesBinding,
         private val onItemClicked: (String) -> Unit) : RecyclerView.ViewHolder(binding.root) {
         fun bind(coinInfo: CoinInfo, position: Int) = binding.apply {
                 viewHolder = this@ViewHolder
@@ -67,7 +67,6 @@ class PreferencesAdapter : RecyclerView.Adapter<PreferencesAdapter.ViewHolder>()
                     "string",
                     binding.root.context.packageName
             )
-            println("id of $coinName = $id in getCoinNameKorean()")
 
             return if (id != 0)
                 binding.root.resources.getString(id)
