@@ -138,5 +138,5 @@ object CoinInfosMaker {
         return coinInfos
     }
 
-    private fun println(data: String) = Log.d("InitCoinInfos", data)
+    private fun println(data: String) = Log.d("CoinInfosMaker", data)
 }

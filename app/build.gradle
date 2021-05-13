@@ -10,7 +10,7 @@ repositories {
 
 android {
     compileSdkVersion 30
-    buildToolsVersion "30.0.0"
+    buildToolsVersion "30.0.2"
 
     defaultConfig {
         applicationId "org.techtown.cryptoculus"
@@ -43,13 +43,6 @@ android {
 
     kotlinOptions {
         jvmTarget = '1.8'
-    }
-
-    // Dagger와 데이터 바인딩 동시 사용 시 오류 메시지 출력 한계 높여주기
-    gradle.projectsEvaluated {
-        tasks.withType(JavaCompile) {
-            options.compilerArgs << "-Xmaxerrs" << "500"
-        }
     }
 }
 

@@ -1,7 +1,6 @@
 package org.techtown.cryptoculus.repository.network
 
 import io.reactivex.Single
-import org.json.JSONObject
 import org.techtown.cryptoculus.pojo.*
 import retrofit2.Call
 import retrofit2.Response

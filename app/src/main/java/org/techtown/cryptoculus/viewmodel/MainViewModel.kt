@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import org.techtown.cryptoculus.repository.RepositoryImpl
@@ -43,10 +44,12 @@ class MainViewModel(application: Application) : ViewModel(){
 
     fun getData() {
         val exchange = repository.getExchange()
+        val coinInfosTemp = ArrayList<CoinInfo>()
 
         addDisposable(repository.getData(exchange)
             .map {
-                val coinInfosNew = CoinInfosMaker.maker(exchange, it.body()!!)
+                // 형변환이 없으면 어떤 Array인지 특정할 수 없다는 빌드 에러가 발생한다
+                val coinInfosNew = CoinInfosMaker.maker(exchange, it.body()!!) as ArrayList<CoinInfo>
 
                 // News
                 if (repository.getRestartApp() && repository.getAllByExchange(exchange).isNotEmpty()) {
@@ -57,15 +60,28 @@ class MainViewModel(application: Application) : ViewModel(){
                 }
 
                 coinInfosNew
-            }.subscribe(
+            }.toObservable()
+            .flatMap {
+                Observable.fromIterable(it)
+            }
+            .filter {
+                if (repository.getAllByExchange(exchange).isNotEmpty())
+                    repository.getCoinInfo(exchange, it.coinName).coinViewCheck
+                else // isEmpty()
+                    true
+            }
+            .subscribe(
                 {
-                    if (repository.getRestartApp() && repository.getAllByExchange(exchange).isNotEmpty())
-                        updateAll(it.toList()) { coinInfos.value = it }
-                    else
-                        insertAll(it.toList()) { coinInfos.value = it }
+                    coinInfosTemp.add(it)
                 },
-                { println("response error in getData(\"${exchange}\"): ${it.message}") }
-            ))
+                {
+                    println("onError: $it")
+                },
+                {
+                    coinInfos.value = coinInfosTemp
+                }
+            )
+        )
     }
 
     private fun compareCoinInfos(coinInfosNew: ArrayList<CoinInfo>, exchange: String) {

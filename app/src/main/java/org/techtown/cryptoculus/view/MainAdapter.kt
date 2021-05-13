@@ -114,9 +114,7 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
     override fun getFilter() = object : Filter() {
         override fun performFiltering(constraint: CharSequence): FilterResults {
             val charString = constraint.toString()
-            println("filteredCoinInfos.size = ${filteredCoinInfos.size}")
-            println("coinInfos.size = ${coinInfos.size}")
-            // 둘 다 0이다
+
             filteredCoinInfos = if (charString.isEmpty())
                 coinInfos
             else {
