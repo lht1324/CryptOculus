@@ -14,15 +14,15 @@ interface Repository {
 
     fun getCoinInfo(exchange: String, coinName: String): CoinInfo
 
-    fun insert(coinInfo: CoinInfo): Observable<Unit>
+    fun insert(coinInfo: CoinInfo)
 
-    fun insertAll(coinInfos: List<CoinInfo>): Observable<Unit>
+    fun insertAll(coinInfos: List<CoinInfo>)
 
-    fun update(coinInfo: CoinInfo): Observable<Unit>
+    fun update(coinInfo: CoinInfo)
 
-    fun updateAll(coinInfos: List<CoinInfo>): Observable<Unit>
+    fun updateAll(coinInfos: List<CoinInfo>)
 
-    fun delete(coinInfo: CoinInfo): Observable<Unit>
+    fun delete(coinInfo: CoinInfo)
 
     fun getRestartApp(): Boolean
 

@@ -59,7 +59,7 @@ class PreferencesFragment(private val application: Application) : Fragment() {
         super.onOptionsItemSelected(item)
 
         if (item.itemId == android.R.id.home)
-            (activity as MainActivity).supportFragmentManager.popBackStack()
+            (activity as MainActivity).backToMainActivity()
 
         return true
     }
@@ -81,16 +81,21 @@ class PreferencesFragment(private val application: Application) : Fragment() {
                 })
 
                 setOnClickListener {
-                    preferencesAdapter.coinInfos = viewModel.updateCoinViewChecks(preferencesAdapter.coinInfos, isChecked)
+                    preferencesAdapter.coinInfos = viewModel.changeAllChecks(preferencesAdapter.coinInfos, checkedTextView.isChecked)
                     preferencesAdapter.notifyDataSetChanged()
-                    checkedTextView.toggle()
                 }
             }
         }
 
+        // 전체 선택이 바뀌는 경우
+        // 내가 누른다
+        // 전체가 채워지거나 한 개 이상이 빠진다
+
         viewModel.getCoinInfos().observe(viewLifecycleOwner, {
-            preferencesAdapter.coinInfos = it
-            preferencesAdapter.notifyDataSetChanged()
+            preferencesAdapter.apply {
+                coinInfos = it
+                notifyDataSetChanged()
+            }
         })
 
         preferencesAdapter.clickedItem.observe(viewLifecycleOwner, { coinName ->

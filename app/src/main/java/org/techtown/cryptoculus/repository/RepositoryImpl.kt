@@ -26,15 +26,15 @@ class RepositoryImpl(private val application: Application) : Repository{
 
     override fun getCoinInfo(exchange: String, coinName: String) = coinInfoDao.getCoinInfo(exchange, coinName)
 
-    override fun insert(coinInfo: CoinInfo) = template { coinInfoDao.insert(coinInfo) }
+    override fun insert(coinInfo: CoinInfo) = coinInfoDao.insert(coinInfo)
 
-    override fun insertAll(coinInfos: List<CoinInfo>) = template { coinInfoDao.insertAll(coinInfos) }
+    override fun insertAll(coinInfos: List<CoinInfo>) = coinInfoDao.insertAll(coinInfos)
 
-    override fun update(coinInfo: CoinInfo) = template { coinInfoDao.update(coinInfo) }
+    override fun update(coinInfo: CoinInfo) = coinInfoDao.update(coinInfo)
 
-    override fun updateAll(coinInfos: List<CoinInfo>) = template { coinInfoDao.updateAll(coinInfos) }
+    override fun updateAll(coinInfos: List<CoinInfo>) = coinInfoDao.updateAll(coinInfos)
 
-    override fun delete(coinInfo: CoinInfo) = template { coinInfoDao.delete(coinInfo) }
+    override fun delete(coinInfo: CoinInfo) = coinInfoDao.delete(coinInfo)
 
     override fun getRestartApp() = preferences.getRestartApp()
 

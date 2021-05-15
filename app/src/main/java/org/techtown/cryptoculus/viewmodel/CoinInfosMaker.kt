@@ -53,7 +53,6 @@ object CoinInfosMaker {
                             volumeInTicker = formatterVolume.format(tickerTemp.volume.toDouble())
                             changeRate = formatterChangeRate.format((tickerTemp.last.toDouble() - tickerTemp.yesterdayLast.toDouble()) / tickerTemp.yesterdayLast.toDouble() * 100.0)
                         }
-                        coinNameOriginal = coinNameOriginals[i]
                         coinName = coinNameOriginals[i].toUpperCase()
                     }
                     coinInfos.add(coinInfo)
@@ -90,14 +89,10 @@ object CoinInfosMaker {
                             changeRate = formatterChangeRate.format((tickerTemp.closingPrice.toDouble() - tickerTemp.prevClosingPrice.toDouble()) / tickerTemp.prevClosingPrice.toDouble() * 100.0)
                         }
 
-                        if (coinNameOriginals[i] == "TRUETEMP") {
-                            coinNameOriginal = "TRUE"
-                            coinName = "TRUE"
-                        }
-                        else {
-                            coinNameOriginal = coinNameOriginals[i]
-                            coinName = coinNameOriginals[i]
-                        }
+                        coinName = if (coinNameOriginals[i] == "TRUETEMP")
+                            "TRUE"
+                        else
+                            coinNameOriginals[i]
                     }
                     coinInfos.add(coinInfo)
                 }
@@ -127,7 +122,6 @@ object CoinInfosMaker {
                             volumeInTicker = formatterVolume.format(tickers[i].tradeVolume.toDouble())
                             changeRate = formatterChangeRate.format((tickers[i].tradePrice.toDouble() - tickers[i].prevClosingPrice.toDouble()) / tickers[i].prevClosingPrice.toDouble() * 100.0)
                         }
-                        coinNameOriginal = tickers[i].market
                         coinName = tickers[i].market.replace("KRW-", "")
                     }
                     coinInfos.add(coinInfo)

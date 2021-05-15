@@ -49,16 +49,12 @@ class PreferencesAdapter : RecyclerView.Adapter<PreferencesAdapter.ViewHolder>()
                         else
                             drawableId
                 )
-
-                checkedTextView.isChecked = coinInfo.coinViewCheck
             }
 
-        fun changeCoinView(coinViewCheck: Boolean, position: Int) {
-            coinInfos[position].coinViewCheck = !coinViewCheck
-            binding.checkedTextView.toggle()
+        fun changeCoinView(position: Int) {
             onItemClicked(coinInfos[position].coinName)
-            // 여기서 뷰모델 업데이트도 해 줄까?
-            // onItemClicked해서 클릭된 거 업데이트 하면 되잖아
+            coinInfos[position].coinViewCheck = !coinInfos[position].coinViewCheck
+            binding.checkedTextView.toggle()
         }
 
         fun getCoinNameKorean(coinName: String): String {

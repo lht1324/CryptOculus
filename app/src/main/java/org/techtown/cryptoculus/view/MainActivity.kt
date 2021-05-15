@@ -153,7 +153,6 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun afterTextChanged(p0: Editable?) {}
-
             })
         }
 
@@ -183,6 +182,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun openPreferencesFragment() {
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        supportActionBar!!.title = "보고 싶은 코인을 선택하세요."
 
         supportFragmentManager
                 .beginTransaction()
@@ -193,9 +193,11 @@ class MainActivity : AppCompatActivity() {
 
     fun backToMainActivity() {
         supportActionBar!!.setDisplayHomeAsUpEnabled(false)
+        supportActionBar!!.title = "CryptOculus"
 
         showLoadingScreen(true)
         supportFragmentManager.popBackStack()
+        getData()
     }
 
     private fun openNewsDialog(news: ArrayList<Any>) = NewsDialog(this).apply {

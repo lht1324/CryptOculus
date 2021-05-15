@@ -62,36 +62,43 @@ class PreferencesViewModel(application: Application) : ViewModel() {
 
     // 전체 체크 눌렀을 때
     @RequiresApi(Build.VERSION_CODES.N)
-    fun updateCoinViewChecks(coinInfos: ArrayList<CoinInfo>, checkAll: Boolean): ArrayList<CoinInfo> {
+    fun changeAllChecks(coinInfos: ArrayList<CoinInfo>, checkAll: Boolean): ArrayList<CoinInfo> {
         coinInfos.replaceAll {
             it.coinViewCheck = !checkAll
             it
         }
         updateAll(coinInfos)
-        // coinInfos.value = savedCoinInfos
-        // DB를 업데이트하면 그걸 자동으로 받아오는 게 되나?
+        this.checkAll.value = !checkAll
+
         return coinInfos
     }
 
-    // 하나만 체크 됐을 때
     fun updateCoinViewCheck(coinName: String) {
-        val coinInfoTemp = getCoinInfo(exchange, coinName)
+        val coinInfoTemp = getCoinInfo(repository.getExchange(), coinName)
+
         coinInfoTemp.coinViewCheck = !coinInfoTemp.coinViewCheck
         update(coinInfoTemp)
+
+        if (checkAll.value!!)
+            checkAll.value = false
+
+        else {
+            val coinInfosTemp = repository.getAllByExchange(repository.getExchange())
+
+            for (i in coinInfosTemp.indices) {
+                if (i < coinInfosTemp.size - 1 && !coinInfosTemp[i].coinViewCheck)
+                    break
+                if (i == coinInfosTemp.size - 1 && coinInfosTemp[i].coinViewCheck)
+                    checkAll.value = true
+            }
+        }
     }
 
-    fun updateCoinViewChecks() {
-        val coinInfosTemp = repository.getAllByExchange(repository.getExchange())
-        // 종료할 때 한꺼번에 받아온 다음에
-        // 넘겨주는 건 안 돼?
-        // 기본 정보는 coinInfosTemp에 있으니까 coinViewCheck만 전부 바꿔주면 되잖아
-   }
+    private fun getCoinInfo(exchange: String, coinName: String) = repository.getCoinInfo(exchange, coinName)
 
-    fun getCoinInfo(exchange: String, coinName: String) = repository.getCoinInfo(exchange, coinName)
+    private fun update(coinInfo: CoinInfo) = repository.update(coinInfo)
 
-    fun update(coinInfo: CoinInfo) = repository.update(coinInfo)
-
-    fun updateAll(coinInfos: ArrayList<CoinInfo>) = repository.updateAll(coinInfos)
+    private fun updateAll(coinInfos: ArrayList<CoinInfo>) = repository.updateAll(coinInfos.toList())
 
     private fun addDisposable(disposable: Disposable) = compositeDisposable.add(disposable)
 

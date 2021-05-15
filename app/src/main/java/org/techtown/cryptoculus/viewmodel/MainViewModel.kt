@@ -58,6 +58,7 @@ class MainViewModel(application: Application) : ViewModel(){
                     if (coinInfosOld.containsAll(coinInfosNew) || coinInfosNew.containsAll(coinInfosOld))
                         compareCoinInfos(coinInfosNew, exchange)
                 }
+                println("map is executed.")
 
                 coinInfosNew
             }.toObservable()
@@ -70,6 +71,14 @@ class MainViewModel(application: Application) : ViewModel(){
                 else // isEmpty()
                     true
             }
+            .map {
+                if (repository.getAllByExchange(exchange).isNotEmpty()) {
+                    it.coinViewCheck = repository.getCoinInfo(exchange, it.coinName).coinViewCheck
+                    it
+                }
+                else
+                    it
+            }
             .subscribe(
                 {
                     coinInfosTemp.add(it)
@@ -78,6 +87,11 @@ class MainViewModel(application: Application) : ViewModel(){
                     println("onError: $it")
                 },
                 {
+                    if (repository.getAllByExchange(exchange).isNotEmpty())
+                        updateAll(coinInfosTemp.toList())
+                    else
+                        insertAll(coinInfosTemp.toList())
+                    
                     coinInfos.value = coinInfosTemp
                 }
             )
@@ -90,6 +104,8 @@ class MainViewModel(application: Application) : ViewModel(){
         val deListing = coinInfosOld.containsAll(coinInfosNew)
         val newsTemp = ArrayList<Any>()
         val coinList = ArrayList<String>()
+        println("newListing = $newListing")
+        println("deListing = $deListing")
 
         if (newListing) { // 신규 상장
             for (i in coinInfosNew.indices) {
@@ -127,20 +143,15 @@ class MainViewModel(application: Application) : ViewModel(){
         news.value = newsTemp
     }
 
-    private fun insert(coinInfo: CoinInfo) = addDisposable(repository.insert(coinInfo)
-            .subscribe {  })
+    private fun insert(coinInfo: CoinInfo) = repository.insert(coinInfo)
 
-    private fun insertAll(coinInfos: List<CoinInfo>, next: () -> Unit) = addDisposable(repository.insertAll(coinInfos)
-            .subscribe { next() })
+    private fun insertAll(coinInfos: List<CoinInfo>) = repository.insertAll(coinInfos)
 
-    fun update(coinInfo: CoinInfo) = addDisposable(repository.update(coinInfo)
-            .subscribe { })
+    // fun update(coinInfo: CoinInfo) = repository.update(coinInfo)
 
-    private fun updateAll(coinInfos: List<CoinInfo>, next: () -> Unit) = addDisposable(repository.updateAll(coinInfos)
-            .subscribe { next() })
+    private fun updateAll(coinInfos: List<CoinInfo>) = repository.updateAll(coinInfos)
 
-    private fun delete(coinInfo: CoinInfo) = addDisposable(repository.delete(coinInfo)
-            .subscribe { })
+    private fun delete(coinInfo: CoinInfo) = repository.delete(coinInfo)
 
     fun changeExchange(position: Int) {
         repository.putExchange(when (position) {
@@ -159,7 +170,7 @@ class MainViewModel(application: Application) : ViewModel(){
     fun getSelection() = when (repository.getExchange()) {
         "Coinone" -> 0
         "Bithumb" -> 1
-        else -> 2
+        else -> 2 // "Upbit"
     }
 
     private fun putRestartApp(restartApp: Boolean) = repository.putRestartApp(restartApp)
