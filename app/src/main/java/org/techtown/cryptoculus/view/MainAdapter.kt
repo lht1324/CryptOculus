@@ -5,13 +5,18 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.app.Application
 import android.content.Context
+import android.content.DialogInterface
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Filter
 import android.widget.Filterable
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import org.techtown.cryptoculus.R
@@ -25,6 +30,7 @@ import kotlin.collections.ArrayList
 class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdapter.ViewHolder>(), Filterable {
     var coinInfos = ArrayList<CoinInfo>()
     var filteredCoinInfos = ArrayList<CoinInfo>()
+    var openChart = MutableLiveData<String>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -68,6 +74,8 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
 
         fun onClick(clicked: Boolean) = changeVisibility(clicked)
 
+        fun onClick2(coinName: String) = showDialog(coinName)
+
         fun getCoinNameKorean(coinName: String): String {
             val id = binding.root.resources.getIdentifier(
                 coinName,
@@ -81,7 +89,7 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
                     "신규 상장"
         }
 
-        private fun changeVisibility(isExpanded: Boolean) {
+        fun changeVisibility(isExpanded: Boolean) {
             binding.clicked = !(binding.clicked!!)
             binding.linearLayout.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             val height = binding.linearLayout.measuredHeight
@@ -109,6 +117,18 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
             // Animation start
             valueAnimator.start()
         }
+
+        fun showDialog(coinName: String): AlertDialog = AlertDialog.Builder(mContext)
+                .setTitle("예를 누르면 거래소 차트 페이지로 이동해요.")
+                .setMessage("이동하시겠어요?")
+                .setPositiveButton("네.") { _: DialogInterface, _: Int ->
+                    openChart.value = coinName
+                }
+                .setNegativeButton("아니요.") { _: DialogInterface, _: Int ->
+                }
+                .show()
+
+        private fun showToast(data: String) = Toast.makeText(mContext, data, Toast.LENGTH_SHORT).show()
     }
 
     override fun getFilter() = object : Filter() {
@@ -142,7 +162,7 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
         }
 
         override fun publishResults(constraint: CharSequence, results: FilterResults) {
-            filteredCoinInfos  = results.values as ArrayList<CoinInfo>
+            filteredCoinInfos = results.values as ArrayList<CoinInfo>
             notifyDataSetChanged()
         }
     }
@@ -150,6 +170,7 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
     fun setItems(coinInfos: ArrayList<CoinInfo>) {
         filteredCoinInfos = coinInfos
         this.coinInfos = coinInfos
+        notifyDataSetChanged()
     }
 
     private fun println(data: String) = Log.d("MainAdapter", data)

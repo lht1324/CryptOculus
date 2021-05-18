@@ -1,7 +1,9 @@
 package org.techtown.cryptoculus.view
 
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.StrictMode
@@ -29,15 +31,20 @@ class MainActivity : AppCompatActivity() {
     // 파일 저장 권한
     // 터치한 곳에 버튼 넣어서 거래소 차트로 연결해주기
     // 자동으로 새로 받아오기
-    // coinViewCheck 저장
     private lateinit var binding: ActivityMainBinding
     private lateinit var callback: OnBackPressedCallback
     private val mainAdapter: MainAdapter by lazy {
         MainAdapter(this)
     }
     private var backPressedLast: Long = 0
-    lateinit var mainViewModel: MainViewModel
-    lateinit var sortingViewModel: SortingViewModel
+    // private lateinit var mainViewModel: MainViewModel
+    // private lateinit var sortingViewModel: SortingViewModel
+    private val mainViewModel by lazy {
+        ViewModelProvider(this, MainViewModel.Factory(application)).get(MainViewModel::class.java)
+    }
+    private val sortingViewModel by lazy {
+        ViewModelProvider(this, SortingViewModel.Factory(application)).get(SortingViewModel::class.java)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -126,8 +133,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun init() {
-        mainViewModel = ViewModelProvider(this, MainViewModel.Factory(application)).get(MainViewModel::class.java)
-        sortingViewModel = ViewModelProvider(this, SortingViewModel.Factory(application)).get(SortingViewModel::class.java)
+        // mainViewModel = ViewModelProvider(this, MainViewModel.Factory(application)).get(MainViewModel::class.java)
+        // sortingViewModel = ViewModelProvider(this, SortingViewModel.Factory(application)).get(SortingViewModel::class.java)
 
         binding.apply {
             recyclerView.apply {
@@ -158,14 +165,20 @@ class MainActivity : AppCompatActivity() {
 
         // 3초마다 받아오는 기능 만들 때 레이아웃 초기화되는 거 없애야 한다
         mainViewModel.getCoinInfos().observe(this, { coinInfos ->
-            // binding.editText.text.clear()
             mainAdapter.setItems(sortingViewModel.sortCoinInfos(coinInfos))
-            mainAdapter.notifyDataSetChanged()
             showLoadingScreen(false)
         })
 
         mainViewModel.getNews().observe(this, { news ->
             openNewsDialog(news)
+        })
+
+        mainAdapter.openChart.observe(this, { coinName ->
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(when (mainViewModel.getSelection()) {
+                0 -> "https://coinone.co.kr/chart?site=coinone${coinName.toLowerCase()}&unit_time=15m"
+                1 -> "https://m.bithumb.com/trade/chart/${coinName}_KRW"
+                else -> "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-$coinName&tab=chart"
+            })))
         })
     }
 

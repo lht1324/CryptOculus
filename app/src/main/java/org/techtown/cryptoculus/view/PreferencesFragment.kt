@@ -4,6 +4,8 @@ import android.app.Application
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.*
 import androidx.activity.OnBackPressedCallback
@@ -21,7 +23,7 @@ class PreferencesFragment(private val application: Application) : Fragment() {
     private lateinit var viewModel: PreferencesViewModel
     private lateinit var callback: OnBackPressedCallback
     private val preferencesAdapter: PreferencesAdapter by lazy {
-        PreferencesAdapter()
+        PreferencesAdapter(requireContext())
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
@@ -75,14 +77,26 @@ class PreferencesFragment(private val application: Application) : Fragment() {
                 addItemDecoration(RecyclerViewDecoration(30))
             }
 
+            editText.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+
+                override fun onTextChanged(charSequence: CharSequence?, p1: Int, p2: Int, p3: Int) {
+                    if (preferencesAdapter.coinInfos.isNotEmpty()) // 이 조건을 안 넣으면 비동기 처리 중이라서 어댑터 내의 Array가 비었을 때도 텍스트 변경을 관찰한다.
+                        preferencesAdapter.filter.filter(charSequence)
+                }
+
+                override fun afterTextChanged(p0: Editable?) {}
+            })
+
             checkedTextView.apply {
                 viewModel.getCheckAll().observe(viewLifecycleOwner, {
                     isChecked = it
                 })
 
                 setOnClickListener {
-                    preferencesAdapter.coinInfos = viewModel.changeAllChecks(preferencesAdapter.coinInfos, checkedTextView.isChecked)
-                    preferencesAdapter.notifyDataSetChanged()
+                    if (editText.text.isNotBlank())
+                        editText.text.clear()
+                    preferencesAdapter.setItems(viewModel.changeAllChecks(preferencesAdapter.coinInfos, isChecked))
                 }
             }
         }
@@ -92,10 +106,7 @@ class PreferencesFragment(private val application: Application) : Fragment() {
         // 전체가 채워지거나 한 개 이상이 빠진다
 
         viewModel.getCoinInfos().observe(viewLifecycleOwner, {
-            preferencesAdapter.apply {
-                coinInfos = it
-                notifyDataSetChanged()
-            }
+            preferencesAdapter.setItems(it)
         })
 
         preferencesAdapter.clickedItem.observe(viewLifecycleOwner, { coinName ->

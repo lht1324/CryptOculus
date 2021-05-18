@@ -1,7 +1,11 @@
 package org.techtown.cryptoculus.view
 
+import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Filter
+import android.widget.Filterable
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import org.techtown.cryptoculus.R
@@ -10,8 +14,9 @@ import org.techtown.cryptoculus.repository.model.CoinInfo
 import java.util.*
 import kotlin.collections.ArrayList
 
-class PreferencesAdapter : RecyclerView.Adapter<PreferencesAdapter.ViewHolder>() {
+class PreferencesAdapter(private val mContext: Context) : RecyclerView.Adapter<PreferencesAdapter.ViewHolder>(), Filterable {
     var coinInfos = ArrayList<CoinInfo>()
+    var filteredCoinInfos = ArrayList<CoinInfo>()
     val clickedItem = MutableLiveData<String>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -26,17 +31,16 @@ class PreferencesAdapter : RecyclerView.Adapter<PreferencesAdapter.ViewHolder>()
     }
 
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-        viewHolder.bind(coinInfos[position], position)
+        viewHolder.bind(filteredCoinInfos[position])
     }
 
-    override fun getItemCount() = coinInfos.size
+    override fun getItemCount() = filteredCoinInfos.size
 
     inner class ViewHolder(private val binding: ItemPreferencesBinding,
         private val onItemClicked: (String) -> Unit) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(coinInfo: CoinInfo, position: Int) = binding.apply {
+        fun bind(coinInfo: CoinInfo) = binding.apply {
                 viewHolder = this@ViewHolder
                 this.coinInfo = coinInfo
-                this.position = position
 
                 val drawableId = root.resources.getIdentifier(
                         coinInfo.coinName.toLowerCase(),
@@ -51,9 +55,9 @@ class PreferencesAdapter : RecyclerView.Adapter<PreferencesAdapter.ViewHolder>()
                 )
             }
 
-        fun changeCoinView(position: Int) {
-            onItemClicked(coinInfos[position].coinName)
-            coinInfos[position].coinViewCheck = !coinInfos[position].coinViewCheck
+        fun changeCoinView(coinInfo: CoinInfo) {
+            onItemClicked(coinInfo.coinName)
+            coinInfos[coinInfos.indexOf(coinInfo)].coinViewCheck = !coinInfos[coinInfos.indexOf(coinInfo)].coinViewCheck
             binding.checkedTextView.toggle()
         }
 
@@ -70,4 +74,53 @@ class PreferencesAdapter : RecyclerView.Adapter<PreferencesAdapter.ViewHolder>()
                 "신규 상장"
         }
     }
+
+    // 전체 선택을 누르면 coinInfos가 아니라 coinInfos를 변경하는 걸로 바꿔야 하나?
+
+    override fun getFilter() = object : Filter() {
+        override fun performFiltering(constraint: CharSequence): FilterResults {
+            val charString = constraint.toString()
+
+            filteredCoinInfos = if (charString.isEmpty()) {
+                for (i in coinInfos.indices)
+                    println("coinInfos[$i] = ${coinInfos[i].coinName}")
+                coinInfos
+            }
+            else {
+                val filteredList = ArrayList<CoinInfo>()
+
+                if (coinInfos.isNotEmpty()) {
+                    for (i in coinInfos.indices) {
+                        val id = mContext.resources.getIdentifier(
+                            coinInfos[i].coinName,
+                            "string",
+                            "org.techtown.cryptoculus"
+                        )
+                        val coinNameKorean = if (id != 0) mContext.resources.getString(id)
+                        else "신규 상장"
+
+                        if("${coinInfos[i].coinName} / $coinNameKorean".toLowerCase().contains(charString.toLowerCase()))
+                            filteredList.add(coinInfos[i])
+                    }
+                }
+                filteredList
+            }
+            val filterResults = FilterResults()
+            filterResults.values = filteredCoinInfos
+            return filterResults
+        }
+
+        override fun publishResults(constraint: CharSequence, results: FilterResults) {
+            filteredCoinInfos  = results.values as ArrayList<CoinInfo>
+            notifyDataSetChanged()
+        }
+    }
+
+    fun setItems(coinInfos: ArrayList<CoinInfo>) {
+        filteredCoinInfos = coinInfos
+        this.coinInfos = coinInfos
+        notifyDataSetChanged()
+    }
+
+    private fun println(data: String) = Log.d("PreferencesAdapter", data)
 }

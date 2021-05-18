@@ -6,8 +6,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import org.techtown.cryptoculus.repository.RepositoryImpl
 import org.techtown.cryptoculus.repository.model.CoinInfo
 
@@ -44,42 +46,57 @@ class MainViewModel(application: Application) : ViewModel(){
 
     fun getData() {
         val exchange = repository.getExchange()
-        val coinInfosTemp = ArrayList<CoinInfo>()
+        val exchangeIsNotEmpty = repository.getAllByExchange(exchange).isNotEmpty()
 
         addDisposable(repository.getData(exchange)
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
             .map {
                 // 형변환이 없으면 어떤 Array인지 특정할 수 없다는 빌드 에러가 발생한다
                 val coinInfosNew = CoinInfosMaker.maker(exchange, it.body()!!) as ArrayList<CoinInfo>
 
                 // News
-                if (repository.getRestartApp() && repository.getAllByExchange(exchange).isNotEmpty()) {
+                if (repository.getRestartApp() && exchangeIsNotEmpty) {
                     val coinInfosOld = ArrayList(repository.getAllByExchange(exchange))
 
                     if (coinInfosOld.containsAll(coinInfosNew) || coinInfosNew.containsAll(coinInfosOld))
                         compareCoinInfos(coinInfosNew, exchange)
                 }
-                println("map is executed.")
 
                 coinInfosNew
             }.toObservable()
             .flatMap {
                 Observable.fromIterable(it)
             }
+            // .observeOn(Schedulers.io())
             .filter {
-                if (repository.getAllByExchange(exchange).isNotEmpty())
-                    repository.getCoinInfo(exchange, it.coinName).coinViewCheck
+                val savedCoinInfoTemp = repository.getCoinInfo(exchange, it.coinName)
+
+                if (exchangeIsNotEmpty) {
+                    it.coinViewCheck = savedCoinInfoTemp.coinViewCheck // preferencesAdapter에서 isChecked에 사용된다
+                    savedCoinInfoTemp.coinViewCheck
+                }
                 else // isEmpty()
                     true
             }
+            .toList()
             .map {
-                if (repository.getAllByExchange(exchange).isNotEmpty()) {
-                    it.coinViewCheck = repository.getCoinInfo(exchange, it.coinName).coinViewCheck
-                    it
-                }
+                if (exchangeIsNotEmpty)
+                    updateAll(it)
                 else
-                    it
+                    insertAll(it)
+                ArrayList(it)
             }
+            .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
+                {
+                    coinInfos.value = it
+                },
+                {
+                    println("onError: $it")
+                }
+            )
+            /* .subscribe(
                 {
                     coinInfosTemp.add(it)
                 },
@@ -87,14 +104,14 @@ class MainViewModel(application: Application) : ViewModel(){
                     println("onError: $it")
                 },
                 {
-                    if (repository.getAllByExchange(exchange).isNotEmpty())
+                    if (exchangeIsNotEmpty)
                         updateAll(coinInfosTemp.toList())
                     else
                         insertAll(coinInfosTemp.toList())
                     
                     coinInfos.value = coinInfosTemp
                 }
-            )
+            ) */
         )
     }
 
