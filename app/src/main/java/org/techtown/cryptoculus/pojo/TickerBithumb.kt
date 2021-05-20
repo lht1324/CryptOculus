@@ -1,19 +1,18 @@
 package org.techtown.cryptoculus.pojo
 
-
 import com.google.gson.annotations.SerializedName
 
 data class TickerBithumb(
         @SerializedName("opening_price")
-        val openingPrice: String,
+        override var open: String,
         @SerializedName("closing_price")
-        val closingPrice: String,
+        override var close: String,
         @SerializedName("max_price")
-        val maxPrice: String,
+        override var max: String,
         @SerializedName("min_price")
-        val minPrice: String,
+        override var min: String,
         @SerializedName("prev_closing_price")
-        val prevClosingPrice: String,
+        override var yesterdayClose: String,
         @SerializedName("units_traded")
-        val unitsTraded: String
+        override var tradeVolume: String
 ) : Ticker()

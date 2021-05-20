@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.StrictMode
@@ -16,6 +17,7 @@ import android.widget.ArrayAdapter
 import android.widget.ListPopupWindow
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.AppCompatSpinner
 import androidx.databinding.DataBindingUtil
@@ -26,6 +28,7 @@ import org.techtown.cryptoculus.databinding.ActivityMainBinding
 import org.techtown.cryptoculus.viewmodel.MainViewModel
 import org.techtown.cryptoculus.viewmodel.SortingViewModel
 
+@RequiresApi(Build.VERSION_CODES.N)
 class MainActivity : AppCompatActivity() {
     // 고칠 것
     // 파일 저장 권한
@@ -91,6 +94,7 @@ class MainActivity : AppCompatActivity() {
         callback.remove()
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.option_menu, menu)
 
@@ -133,9 +137,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun init() {
-        // mainViewModel = ViewModelProvider(this, MainViewModel.Factory(application)).get(MainViewModel::class.java)
-        // sortingViewModel = ViewModelProvider(this, SortingViewModel.Factory(application)).get(SortingViewModel::class.java)
-
         binding.apply {
             recyclerView.apply {
                 adapter = mainAdapter
@@ -256,6 +257,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getData() {
+        if (binding.editText.text.isNotBlank())
+            binding.editText.text.clear()
         showLoadingScreen(true)
         mainViewModel.getData()
     }

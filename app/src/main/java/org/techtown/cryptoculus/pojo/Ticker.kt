@@ -1,10 +1,11 @@
 package org.techtown.cryptoculus.pojo
 
 open class Ticker {
-    var firstInTicker = ""
-    var lastInTicker = ""
-    var highInTicker = ""
-    var lowInTicker = ""
-    var volumeInTicker = ""
+    open var open = ""
+    open var close = ""
+    open var max = ""
+    open var min = ""
+    open var yesterdayClose = ""
+    open var tradeVolume = ""
     var changeRate = ""
 }

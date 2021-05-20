@@ -13,14 +13,13 @@ import java.text.DecimalFormat
 import kotlin.math.roundToInt
 
 object CoinInfosMaker {
-    // Coinone -> "btc": toUpperCase()
-    // Bithumb -> "BTC"
-    // Upbit -> "KRW-BTC": "KRW-"를 삭제
+    val formatterOthers by lazy {
+        DecimalFormat("###,##0.00")
+    }
+    lateinit var formatterPrice: DecimalFormat
+
     fun maker(exchange: String, response: Any): ArrayList<CoinInfo> {
         val coinInfos = ArrayList<CoinInfo>()
-        lateinit var formatterPrice: DecimalFormat
-        lateinit var formatterVolume: DecimalFormat
-        lateinit var formatterChangeRate: DecimalFormat
 
         when (exchange) {
             "Coinone" -> {
@@ -32,104 +31,58 @@ object CoinInfosMaker {
                     coinNameOriginals.removeAt(0)
 
                 for (i in coinNameOriginals.indices) {
-                    val coinInfo = CoinInfo()
-                    val tickerTemp = gson.fromJson(jsonObject.get(coinNameOriginals[i]).toString(), TickerCoinone::class.java)
-
-                    formatterPrice = if (tickerTemp.last.toDouble() - tickerTemp.last.toDouble().roundToInt() != 0.0)
-                                DecimalFormat("###,##0.00")
-                            else
-                                DecimalFormat("###,###")
-
-                    formatterVolume = DecimalFormat("###,##0.00")
-                    formatterChangeRate = DecimalFormat("###,##0.00")
-
-                    coinInfo.apply {
+                    coinInfos.add(CoinInfo().apply {
                         this.exchange = exchange
-                        ticker.apply {
-                            firstInTicker = formatterPrice.format(tickerTemp.first.toDouble())
-                            lastInTicker = formatterPrice.format(tickerTemp.last.toDouble())
-                            highInTicker = formatterPrice.format(tickerTemp.high.toDouble())
-                            lowInTicker = formatterPrice.format(tickerTemp.low.toDouble())
-                            volumeInTicker = formatterVolume.format(tickerTemp.volume.toDouble())
-                            changeRate = formatterChangeRate.format((tickerTemp.last.toDouble() - tickerTemp.yesterdayLast.toDouble()) / tickerTemp.yesterdayLast.toDouble() * 100.0)
-                        }
                         coinName = coinNameOriginals[i].toUpperCase()
-                    }
-                    coinInfos.add(coinInfo)
+                        ticker = tickerFormatter(gson.fromJson(jsonObject.get(coinNameOriginals[i]).toString(), TickerCoinone::class.java))
+                    })
                 }
             }
-
             "Bithumb" -> {
                 val gson = Gson()
-                val jsonObject = JSONObject(response.toString().replace("TRUE", "TRUETEMP")).getJSONObject("data")
+                val jsonObject = JSONObject(response.toString().replace("TRUE", "TRUETEMP")).getJSONObject("data") // '=TRUE'를 Boolean으로 인식한다
                 val coinNameOriginals = ArrayList<String>(jsonObject.keys().asSequence().toList())
 
                 coinNameOriginals.removeAt(coinNameOriginals.size - 1)
 
                 for (i in coinNameOriginals.indices) {
-                    val coinInfo = CoinInfo()
-                    coinInfo.apply {
+                    coinInfos.add(CoinInfo().apply {
                         this.exchange = exchange
-                        val tickerTemp = gson.fromJson(jsonObject.get(coinNameOriginals[i]).toString(), TickerBithumb::class.java)
-
-                        formatterPrice = if (tickerTemp.closingPrice.toDouble() - tickerTemp.closingPrice.toDouble().roundToInt() != 0.0)
-                            DecimalFormat("###,##0.00")
-                        else
-                            DecimalFormat("###,###")
-
-                        formatterVolume = DecimalFormat("###,##0.00")
-                        formatterChangeRate = DecimalFormat("###,##0.00")
-
-                        ticker!!.apply {
-                            firstInTicker = formatterPrice.format(tickerTemp.openingPrice.toDouble())
-                            lastInTicker = formatterPrice.format(tickerTemp.closingPrice.toDouble())
-                            highInTicker = formatterPrice.format(tickerTemp.maxPrice.toDouble())
-                            lowInTicker = formatterPrice.format(tickerTemp.minPrice.toDouble())
-                            volumeInTicker = formatterVolume.format(tickerTemp.unitsTraded.toDouble())
-                            changeRate = formatterChangeRate.format((tickerTemp.closingPrice.toDouble() - tickerTemp.prevClosingPrice.toDouble()) / tickerTemp.prevClosingPrice.toDouble() * 100.0)
-                        }
-
-                        coinName = if (coinNameOriginals[i] == "TRUETEMP")
-                            "TRUE"
-                        else
-                            coinNameOriginals[i]
-                    }
-                    coinInfos.add(coinInfo)
+                        coinName = if (coinNameOriginals[i] != "TRUETEMP") coinNameOriginals[i] else "TRUE"
+                        ticker = tickerFormatter(gson.fromJson(jsonObject.get(coinNameOriginals[i]).toString(), TickerBithumb::class.java))
+                    })
                 }
             }
-
-            "Upbit" -> { // ArrayList<TickerUpbit>
-                val tickers = response as ArrayList<TickerUpbit>
+            "Upbit" -> {
+                val tickers = response as ArrayList<Ticker>
 
                 for (i in tickers.indices) {
-                    val coinInfo = CoinInfo()
-
-                    formatterPrice = if (tickers[i].tradePrice.toDouble() - tickers[i].tradePrice.toDouble().roundToInt() != 0.0)
-                        DecimalFormat("###,##0.00")
-                    else
-                        DecimalFormat("###,###")
-
-                    formatterVolume = DecimalFormat("###,##0.000")
-                    formatterChangeRate = DecimalFormat("###,##0.00")
-
-                    coinInfo.apply {
+                    coinInfos.add(CoinInfo().apply {
                         this.exchange = exchange
-                        ticker.apply {
-                            firstInTicker = formatterPrice.format(tickers[i].openingPrice.toDouble())
-                            lastInTicker = formatterPrice.format(tickers[i].tradePrice.toDouble())
-                            highInTicker = formatterPrice.format(tickers[i].highPrice.toDouble())
-                            lowInTicker = formatterPrice.format(tickers[i].lowPrice.toDouble())
-                            volumeInTicker = formatterVolume.format(tickers[i].tradeVolume.toDouble())
-                            changeRate = formatterChangeRate.format((tickers[i].tradePrice.toDouble() - tickers[i].prevClosingPrice.toDouble()) / tickers[i].prevClosingPrice.toDouble() * 100.0)
-                        }
-                        coinName = tickers[i].market.replace("KRW-", "")
-                    }
-                    coinInfos.add(coinInfo)
+                        coinName = (tickers[i] as TickerUpbit).market.replace("KRW-", "")
+                        ticker = tickerFormatter(tickers[i])
+                    })
                 }
             }
         }
 
         return coinInfos
+    }
+
+    private fun tickerFormatter(ticker: Ticker): Ticker {
+        formatterPrice = if (ticker.close.toDouble() - ticker.close.toDouble().roundToInt() != 0.0)
+            DecimalFormat("###,##0.00")
+        else
+            DecimalFormat("###,###")
+
+        return ticker.apply {
+            changeRate = formatterOthers.format((ticker.close.toDouble() - ticker.yesterdayClose.toDouble()) / ticker.yesterdayClose.toDouble() * 100.0)
+            open = formatterPrice.format(ticker.open.toDouble())
+            close = formatterPrice.format(ticker.close.toDouble())
+            max = formatterPrice.format(ticker.max.toDouble())
+            min = formatterPrice.format(ticker.min.toDouble())
+            tradeVolume = formatterOthers.format(ticker.tradeVolume.toDouble())
+        }
     }
 
     private fun println(data: String) = Log.d("CoinInfosMaker", data)

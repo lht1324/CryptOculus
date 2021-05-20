@@ -1,21 +1,18 @@
 package org.techtown.cryptoculus.pojo
 
-
 import com.google.gson.annotations.SerializedName
 
 data class TickerCoinone(
-    @SerializedName("currency")
-    val currency: String,
     @SerializedName("first")
-    val first: String,
-    @SerializedName("high")
-    val high: String,
+    override var open: String,
     @SerializedName("last")
-    val last: String,
+    override var close: String,
+    @SerializedName("high")
+    override var max: String,
     @SerializedName("low")
-    val low: String,
+    override var min: String,
     @SerializedName("yesterday_last")
-    val yesterdayLast: String,
+    override var yesterdayClose: String,
     @SerializedName("volume")
-    val volume: String
+    override var tradeVolume: String,
 ) : Ticker()

@@ -19,8 +19,6 @@ class RepositoryImpl(private val application: Application) : Repository{
     override fun getData(exchange: String) = Client().getData(exchange)
 
     override fun getAllByExchangeAsSingle(exchange: String) = coinInfoDao.getAllByExchangeAsSingle(exchange)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
 
     override fun getAllByExchange(exchange: String) = coinInfoDao.getAllByExchange(exchange)
 
@@ -36,10 +34,6 @@ class RepositoryImpl(private val application: Application) : Repository{
 
     override fun delete(coinInfo: CoinInfo) = coinInfoDao.delete(coinInfo)
 
-    override fun getRestartApp() = preferences.getRestartApp()
-
-    override fun putRestartApp(restartApp: Boolean) = preferences.putRestartApp(restartApp)
-
     override fun getExchange() = preferences.getExchange()
 
     override fun putExchange(exchange: String) = preferences.putExchange(exchange)
@@ -47,8 +41,4 @@ class RepositoryImpl(private val application: Application) : Repository{
     override fun getSortMode() = preferences.getSortMode()
 
     override fun putSortMode(sortMode: Int) = preferences.putSortMode(sortMode)
-
-    private fun template(argFun: () -> Unit) = Observable.fromCallable { argFun() }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
 }

@@ -72,10 +72,6 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
             })
         }
 
-        fun onClick(clicked: Boolean) = changeVisibility(clicked)
-
-        fun onClick2(coinName: String) = showDialog(coinName)
-
         fun getCoinNameKorean(coinName: String): String {
             val id = binding.root.resources.getIdentifier(
                 coinName,
@@ -127,8 +123,6 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
                 .setNegativeButton("아니요.") { _: DialogInterface, _: Int ->
                 }
                 .show()
-
-        private fun showToast(data: String) = Toast.makeText(mContext, data, Toast.LENGTH_SHORT).show()
     }
 
     override fun getFilter() = object : Filter() {

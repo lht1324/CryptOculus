@@ -1,7 +1,9 @@
 package org.techtown.cryptoculus.viewmodel
 
 import android.app.Application
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -13,6 +15,7 @@ import io.reactivex.schedulers.Schedulers
 import org.techtown.cryptoculus.repository.RepositoryImpl
 import org.techtown.cryptoculus.repository.model.CoinInfo
 
+@RequiresApi(Build.VERSION_CODES.N)
 class MainViewModel(application: Application) : ViewModel(){
     private val compositeDisposable = CompositeDisposable()
     private val news = MutableLiveData<ArrayList<Any>>()
@@ -39,8 +42,6 @@ class MainViewModel(application: Application) : ViewModel(){
 
     override fun onCleared() {
         compositeDisposable.dispose()
-        if (!repository.getRestartApp())
-            repository.putRestartApp(true)
         super.onCleared()
     }
 
@@ -50,32 +51,37 @@ class MainViewModel(application: Application) : ViewModel(){
 
         addDisposable(repository.getData(exchange)
             .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
+            .observeOn(Schedulers.computation())
             .map {
                 // 형변환이 없으면 어떤 Array인지 특정할 수 없다는 빌드 에러가 발생한다
-                val coinInfosNew = CoinInfosMaker.maker(exchange, it.body()!!) as ArrayList<CoinInfo>
-
+                CoinInfosMaker.maker(exchange, it.body()!!) as ArrayList<CoinInfo>
+            }
+            .observeOn(Schedulers.io())
+            .map {
                 // News
-                if (repository.getRestartApp() && exchangeIsNotEmpty) {
+                // 이거 coinViewCheck로 달라지지 않냐?
+                // coinViewCheck 다르면 안 될 거 같은데
+                if (exchangeIsNotEmpty) {
                     val coinInfosOld = ArrayList(repository.getAllByExchange(exchange))
 
-                    if (coinInfosOld.containsAll(coinInfosNew) || coinInfosNew.containsAll(coinInfosOld))
-                        compareCoinInfos(coinInfosNew, exchange)
+                    // cointainsAll 실행을 위해 전부 true로 바꿔준다
+                    coinInfosOld.replaceAll { coinInfo ->
+                        coinInfo.coinViewCheck = true
+                        coinInfo
+                    }
+
+                    if (coinInfosOld.containsAll(it) || it.containsAll(coinInfosOld))
+                        compareCoinInfos(it, exchange)
                 }
 
-                coinInfosNew
+                it
             }.toObservable()
             .flatMap {
                 Observable.fromIterable(it)
             }
-            // .observeOn(Schedulers.io())
             .filter {
-                val savedCoinInfoTemp = repository.getCoinInfo(exchange, it.coinName)
-
-                if (exchangeIsNotEmpty) {
-                    it.coinViewCheck = savedCoinInfoTemp.coinViewCheck // preferencesAdapter에서 isChecked에 사용된다
-                    savedCoinInfoTemp.coinViewCheck
-                }
+                if (exchangeIsNotEmpty)
+                    repository.getCoinInfo(exchange, it.coinName).coinViewCheck
                 else // isEmpty()
                     true
             }
@@ -93,25 +99,9 @@ class MainViewModel(application: Application) : ViewModel(){
                     coinInfos.value = it
                 },
                 {
-                    println("onError: $it")
+                    println("onError: ${it.message}")
                 }
             )
-            /* .subscribe(
-                {
-                    coinInfosTemp.add(it)
-                },
-                {
-                    println("onError: $it")
-                },
-                {
-                    if (exchangeIsNotEmpty)
-                        updateAll(coinInfosTemp.toList())
-                    else
-                        insertAll(coinInfosTemp.toList())
-                    
-                    coinInfos.value = coinInfosTemp
-                }
-            ) */
         )
     }
 
@@ -164,8 +154,6 @@ class MainViewModel(application: Application) : ViewModel(){
 
     private fun insertAll(coinInfos: List<CoinInfo>) = repository.insertAll(coinInfos)
 
-    // fun update(coinInfo: CoinInfo) = repository.update(coinInfo)
-
     private fun updateAll(coinInfos: List<CoinInfo>) = repository.updateAll(coinInfos)
 
     private fun delete(coinInfo: CoinInfo) = repository.delete(coinInfo)
@@ -189,8 +177,6 @@ class MainViewModel(application: Application) : ViewModel(){
         "Bithumb" -> 1
         else -> 2 // "Upbit"
     }
-
-    private fun putRestartApp(restartApp: Boolean) = repository.putRestartApp(restartApp)
 
     private fun putSortMode(sortMode: Int) = repository.putSortMode(sortMode)
 

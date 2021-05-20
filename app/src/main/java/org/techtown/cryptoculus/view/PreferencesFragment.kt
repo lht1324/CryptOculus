@@ -18,6 +18,7 @@ import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.databinding.FragmentPreferencesBinding
 import org.techtown.cryptoculus.viewmodel.PreferencesViewModel
 
+@RequiresApi(Build.VERSION_CODES.N)
 class PreferencesFragment(private val application: Application) : Fragment() {
     private lateinit var binding: FragmentPreferencesBinding
     private lateinit var viewModel: PreferencesViewModel
@@ -26,7 +27,6 @@ class PreferencesFragment(private val application: Application) : Fragment() {
         PreferencesAdapter(requireContext())
     }
 
-    @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_preferences, container, false)
 
@@ -66,9 +66,9 @@ class PreferencesFragment(private val application: Application) : Fragment() {
         return true
     }
 
-    @RequiresApi(Build.VERSION_CODES.N)
     private fun init() {
         viewModel = ViewModelProvider(this, PreferencesViewModel.Factory(application)).get(PreferencesViewModel::class.java)
+        preferencesAdapter.setHasStableIds(true)
 
         binding.apply {
             recyclerView.apply {
@@ -89,7 +89,7 @@ class PreferencesFragment(private val application: Application) : Fragment() {
             })
 
             checkedTextView.apply {
-                viewModel.getCheckAll().observe(viewLifecycleOwner, {
+                viewModel.getCheckAll().observe(viewLifecycleOwner, { // 이게 문제 아냐?
                     isChecked = it
                 })
 
@@ -100,10 +100,6 @@ class PreferencesFragment(private val application: Application) : Fragment() {
                 }
             }
         }
-
-        // 전체 선택이 바뀌는 경우
-        // 내가 누른다
-        // 전체가 채워지거나 한 개 이상이 빠진다
 
         viewModel.getCoinInfos().observe(viewLifecycleOwner, {
             preferencesAdapter.setItems(it)

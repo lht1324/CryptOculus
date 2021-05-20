@@ -36,6 +36,8 @@ class PreferencesAdapter(private val mContext: Context) : RecyclerView.Adapter<P
 
     override fun getItemCount() = filteredCoinInfos.size
 
+    override fun getItemId(position: Int) = filteredCoinInfos[position].coinName.hashCode().toLong()
+
     inner class ViewHolder(private val binding: ItemPreferencesBinding,
         private val onItemClicked: (String) -> Unit) : RecyclerView.ViewHolder(binding.root) {
         fun bind(coinInfo: CoinInfo) = binding.apply {
@@ -75,17 +77,12 @@ class PreferencesAdapter(private val mContext: Context) : RecyclerView.Adapter<P
         }
     }
 
-    // 전체 선택을 누르면 coinInfos가 아니라 coinInfos를 변경하는 걸로 바꿔야 하나?
-
     override fun getFilter() = object : Filter() {
         override fun performFiltering(constraint: CharSequence): FilterResults {
             val charString = constraint.toString()
 
-            filteredCoinInfos = if (charString.isEmpty()) {
-                for (i in coinInfos.indices)
-                    println("coinInfos[$i] = ${coinInfos[i].coinName}")
+            filteredCoinInfos = if (charString.isEmpty())
                 coinInfos
-            }
             else {
                 val filteredList = ArrayList<CoinInfo>()
 
@@ -117,8 +114,8 @@ class PreferencesAdapter(private val mContext: Context) : RecyclerView.Adapter<P
     }
 
     fun setItems(coinInfos: ArrayList<CoinInfo>) {
-        filteredCoinInfos = coinInfos
         this.coinInfos = coinInfos
+        filteredCoinInfos = coinInfos
         notifyDataSetChanged()
     }
 

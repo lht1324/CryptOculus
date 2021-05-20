@@ -24,10 +24,6 @@ interface Repository {
 
     fun delete(coinInfo: CoinInfo)
 
-    fun getRestartApp(): Boolean
-
-    fun putRestartApp(restartApp: Boolean)
-
     fun getExchange(): String
 
     fun putExchange(exchange: String)

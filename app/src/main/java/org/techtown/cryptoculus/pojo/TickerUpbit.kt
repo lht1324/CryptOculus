@@ -3,17 +3,17 @@ package org.techtown.cryptoculus.pojo
 import com.google.gson.annotations.SerializedName
 
 data class TickerUpbit(
-        val market: String,
         @SerializedName("opening_price")
-        val openingPrice: String,
+        override var open: String,
         @SerializedName("trade_price")
-        val tradePrice: String,
+        override var close: String,
         @SerializedName("high_price")
-        val highPrice: String,
+        override var max: String,
         @SerializedName("low_price")
-        val lowPrice: String,
+        override var min: String,
         @SerializedName("prev_closing_price")
-        val prevClosingPrice: String,
+        override var yesterdayClose: String,
         @SerializedName("acc_trade_volume_24h")
-        val tradeVolume: String
+        override var tradeVolume: String,
+        val market: String
 ) : Ticker()

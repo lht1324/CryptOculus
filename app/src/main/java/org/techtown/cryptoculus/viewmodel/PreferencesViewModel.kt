@@ -7,8 +7,10 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import org.techtown.cryptoculus.repository.RepositoryImpl
 import org.techtown.cryptoculus.repository.model.CoinInfo
 
@@ -19,7 +21,6 @@ class PreferencesViewModel(application: Application) : ViewModel() {
     }
     private val coinInfos = MutableLiveData<ArrayList<CoinInfo>>()
     private val checkAll = MutableLiveData<Boolean>()
-    private var exchange = repository.getExchange()
 
     class Factory(private val application: Application) : ViewModelProvider.Factory {
         override fun <T : ViewModel?> create(modelClass: Class<T>): T {
@@ -38,23 +39,26 @@ class PreferencesViewModel(application: Application) : ViewModel() {
     
     // 첫 실행이면 당연히 DB에 저장된 게 없다
     // 근데 첫 실행 아니어도 못 불러온다
-    private fun getData() = addDisposable(repository.getAllByExchangeAsSingle(exchange)
-            .map { coinInfos ->
-                for (i in coinInfos.indices) {
-                    if (i < coinInfos.size - 1 && !coinInfos[i].coinViewCheck) {
-                        checkAll.value = false
-                        break
-                    }
-                    if (i == coinInfos.size - 1 && coinInfos[i].coinViewCheck)
-                        checkAll.value = true
+    private fun getData() = addDisposable(repository.getAllByExchangeAsSingle(repository.getExchange())
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .map {
+            for (i in it.indices) {
+                if (i < it.size - 1 && !it[i].coinViewCheck) {
+                    checkAll.value = false
+                    break
                 }
-                ArrayList(coinInfos)
-            }.subscribe(
-                    {
-                        coinInfos.value = it
-                    },
-                    { println("onFailure in getData(\"${exchange}\"): ${it.message}") }
-            ))
+                if (i == it.size - 1 && it[i].coinViewCheck)
+                    checkAll.value = true
+            }
+            ArrayList(it)
+        }
+        .subscribe(
+            {
+                coinInfos.value = it
+            },
+            { println("onError: ${it.message}") }
+        ))
 
     fun getCoinInfos() = coinInfos
 
