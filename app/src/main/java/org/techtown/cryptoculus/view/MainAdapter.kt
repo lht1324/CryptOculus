@@ -1,29 +1,20 @@
 package org.techtown.cryptoculus.view
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
-import android.animation.ValueAnimator
-import android.app.Application
 import android.content.Context
 import android.content.DialogInterface
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.widget.Filter
 import android.widget.Filterable
-import android.widget.Toast
+import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.databinding.ItemCoinBinding
 import org.techtown.cryptoculus.repository.model.CoinInfo
-import org.techtown.cryptoculus.viewmodel.MainViewModel
-import org.techtown.cryptoculus.viewmodel.SortingViewModel
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -63,13 +54,25 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
                     else drawableId
             )
 
-            clicked = true
+            clicked = false
 
             textView3.setTextColor(when {
                 coinInfo.ticker.changeRate.toDouble() < 0.0 -> Color.rgb(0, 0, 255)
                 coinInfo.ticker.changeRate.toDouble() > 0.0 -> Color.rgb(255, 0, 0)
                 else -> Color.rgb(128, 128, 128)
             })
+
+            linearLayout1.setOnClickListener {
+                clicked = itemFolding(!clicked!!, linearLayout2)
+            }
+        }
+
+        private fun itemFolding(isExpanded: Boolean, layoutExpand: LinearLayout): Boolean {
+            if (isExpanded)
+                ToggleAnimation.expand(layoutExpand)
+            else
+                ToggleAnimation.collapse(layoutExpand)
+            return isExpanded
         }
 
         fun getCoinNameKorean(coinName: String): String {
@@ -83,35 +86,6 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
                     binding.root.resources.getString(id)
                 else
                     "신규 상장"
-        }
-
-        fun changeVisibility(isExpanded: Boolean) {
-            binding.clicked = !(binding.clicked!!)
-            binding.linearLayout.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            val height = binding.linearLayout.measuredHeight
-            val valueAnimator = if (isExpanded)
-                ValueAnimator.ofInt(0, height)
-            else
-                ValueAnimator.ofInt(height, 0)
-            // Animation이 실행되는 시간, n/1000초
-            valueAnimator.duration = 500
-            valueAnimator.addUpdateListener { animation -> // imageView의 높이 변경
-                binding.linearLayout.apply {
-                    layoutParams.height = animation.animatedValue as Int
-                    requestLayout()
-                    visibility = if (isExpanded) View.VISIBLE else View.GONE
-                }
-            }
-            // 터치했을 때 바로 사라지는 게 아니라 부드럽게 접히는 걸로 해 볼까?
-            // 방향만 반대로 하면 되는 거 아냐
-
-            valueAnimator.addListener(object: AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) {
-                    binding.linearLayout.layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
-                }
-            })
-            // Animation start
-            valueAnimator.start()
         }
 
         fun showDialog(coinName: String): AlertDialog = AlertDialog.Builder(mContext)
