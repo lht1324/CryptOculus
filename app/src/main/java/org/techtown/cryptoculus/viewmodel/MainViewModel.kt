@@ -12,14 +12,17 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import org.techtown.cryptoculus.pojo.Ticker
 import org.techtown.cryptoculus.repository.RepositoryImpl
 import org.techtown.cryptoculus.repository.model.CoinInfo
+import java.util.*
+import kotlin.collections.ArrayList
 
 @RequiresApi(Build.VERSION_CODES.N)
 class MainViewModel(application: Application) : ViewModel(){
     private val compositeDisposable = CompositeDisposable()
-    private val news = MutableLiveData<ArrayList<Any>>()
     private val coinInfos = MutableLiveData<ArrayList<CoinInfo>>()
+    private var timer = Timer()
     private val repository by lazy {
         RepositoryImpl(application)
     }
@@ -32,131 +35,100 @@ class MainViewModel(application: Application) : ViewModel(){
 
     fun getCoinInfos() = coinInfos
 
-    fun getNews() = news
-
     fun getSortMode() = repository.getSortMode()
 
     init {
-        getData()
+        timer.schedule(object : TimerTask() {
+            override fun run() {
+                getData()
+            }
+        }, 0,3000)
     }
 
     override fun onCleared() {
+        if (repository.getAllByExchange("Coinone").isNotEmpty())
+            repository.refreshClickedAll("Coinone")
+
+        if (repository.getAllByExchange("Bithumb").isNotEmpty())
+            repository.refreshClickedAll("Bithumb")
+
+        if (repository.getAllByExchange("Upbit").isNotEmpty())
+            repository.refreshClickedAll("Upbit")
+
+        timer.cancel()
         compositeDisposable.dispose()
         super.onCleared()
     }
 
-    fun getData() {
-        val exchange = repository.getExchange()
-        val exchangeIsNotEmpty = repository.getAllByExchange(exchange).isNotEmpty()
+    fun getData() = addDisposable(repository.getData()
+        .subscribeOn(Schedulers.io())
+        .observeOn(Schedulers.computation())
+        .map {
+            CoinInfosMaker.maker(repository.getExchange(), it.body()!!)
+        }
+        .observeOn(Schedulers.io())
+        .map {
+            if (repository.getAll().isNotEmpty()) {
+                val coinInfosOld = ArrayList(repository.getAll())
 
-        addDisposable(repository.getData(exchange)
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.computation())
-            .map {
-                // 형변환이 없으면 어떤 Array인지 특정할 수 없다는 빌드 에러가 발생한다
-                CoinInfosMaker.maker(exchange, it.body()!!) as ArrayList<CoinInfo>
+                if (coinInfosOld.size > it.size || coinInfosOld.size < it.size || (it.size == coinInfosOld.size && !it.containsAll(coinInfosOld) && !coinInfosOld.containsAll(it)))
+                    updateDB(it)
             }
-            .observeOn(Schedulers.io())
-            .map {
-                // News
-                // 이거 coinViewCheck로 달라지지 않냐?
-                // coinViewCheck 다르면 안 될 거 같은데
-                if (exchangeIsNotEmpty) {
-                    val coinInfosOld = ArrayList(repository.getAllByExchange(exchange))
+            else
+                insertAll(it.toList())
 
-                    // cointainsAll 실행을 위해 전부 true로 바꿔준다
-                    coinInfosOld.replaceAll { coinInfo ->
-                        coinInfo.coinViewCheck = true
-                        coinInfo
-                    }
-
-                    if (coinInfosOld.containsAll(it) || it.containsAll(coinInfosOld))
-                        compareCoinInfos(it, exchange)
+            it
+        }
+        .toObservable()
+        .observeOn(Schedulers.computation())
+        .flatMap {
+            Observable.fromIterable(it)
+        }
+        .observeOn(Schedulers.io())
+        .filter {
+            getCoinViewCheck(it.coinName)
+        }
+        .map {
+            it.clicked = if (repository.getIdleCheck()) repository.getClicked(it.coinName) else false
+            it
+        }.toList()
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(
+            {
+                if (!repository.getIdleCheck()) {
+                    repository.refreshClickedAll(repository.getExchange())
+                    changeIdleCheck()
                 }
 
-                it
-            }.toObservable()
-            .flatMap {
-                Observable.fromIterable(it)
-            }
-            .filter {
-                if (exchangeIsNotEmpty)
-                    repository.getCoinInfo(exchange, it.coinName).coinViewCheck
-                else // isEmpty()
-                    true
-            }
-            .toList()
-            .map {
-                if (exchangeIsNotEmpty)
-                    updateAll(it)
-                else
-                    insertAll(it)
-                ArrayList(it)
-            }
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                {
-                    coinInfos.value = it
-                },
-                {
-                    println("onError: ${it.message}")
-                }
-            )
+                coinInfos.value = ArrayList(it)
+            },
+            { println("onError: ${it.message}")}
         )
-    }
+    )
 
-    private fun compareCoinInfos(coinInfosNew: ArrayList<CoinInfo>, exchange: String) {
-        val coinInfosOld = ArrayList(repository.getAllByExchange(exchange))
-        val newListing = coinInfosNew.containsAll(coinInfosOld)
-        val deListing = coinInfosOld.containsAll(coinInfosNew)
-        val newsTemp = ArrayList<Any>()
-        val coinList = ArrayList<String>()
-        println("newListing = $newListing")
-        println("deListing = $deListing")
+    private fun updateDB(coinInfosNew: ArrayList<CoinInfo>) {
+        val coinInfosOld = ArrayList(repository.getAll())
 
-        if (newListing) { // 신규 상장
-            for (i in coinInfosNew.indices) {
-                if (!coinInfosOld.contains(coinInfosNew[i])) {
-                    coinList.add(coinInfosNew[i].coinName)
-                    insert(coinInfosNew[i])
-                }
-            }
-
-            newsTemp.add(coinList)
+        for (i in coinInfosNew.indices) {
+            if (!coinInfosOld.contains(coinInfosNew[i]))
+                insert(coinInfosNew[i])
         }
 
-        if (deListing) { // 상장 폐지
-            if (coinList.isNotEmpty()) // 신규상장 기록하느라 coinList를 사용했으면 재활용을 위해 비워주기
-                coinList.clear()
-
-            for (i in coinInfosOld.indices) {
-                if (coinInfosNew.contains(coinInfosOld[i])) {
-                    coinList.add(coinInfosOld[i].coinName)
-                    delete(coinInfosOld[i])
-                }
-            }
-
-            newsTemp.add(coinList)
-
-            if (newsTemp.size == 1) // 신규 상장 없고 상장 폐지만 있을 때
-                newsTemp.add(0, "deList")
+        for (i in coinInfosOld.indices) {
+            if (!coinInfosNew.contains(coinInfosOld[i]))
+                delete(coinInfosOld[i])
         }
-
-        if (newsTemp.size == 1) // 신규 상장만 있고 상장 폐지 없을 때
-            newsTemp.add(0, "newList")
-        if (newsTemp.size == 2 && newsTemp[0] != "deList") // 신규 상장 없고 상장 폐지만 있어도 newsTemp.size는 2다
-            newsTemp.add(0, "both")
-
-        news.value = newsTemp
     }
 
     private fun insert(coinInfo: CoinInfo) = repository.insert(coinInfo)
 
     private fun insertAll(coinInfos: List<CoinInfo>) = repository.insertAll(coinInfos)
 
-    private fun updateAll(coinInfos: List<CoinInfo>) = repository.updateAll(coinInfos)
-
     private fun delete(coinInfo: CoinInfo) = repository.delete(coinInfo)
+
+    private fun getCoinViewCheck(coinName: String) = repository.getCoinViewCheck(coinName)
+
+    fun updateClicked(coinName: String) = repository.updateClicked(coinName)
 
     fun changeExchange(position: Int) {
         repository.putExchange(when (position) {
@@ -164,18 +136,25 @@ class MainViewModel(application: Application) : ViewModel(){
             1 -> "Bithumb"
             else -> "Upbit" // 2
         })
-        getData()
+        changeIdleCheck() // true to false
     }
 
     fun updateSortMode(sortMode: Int) {
         putSortMode(sortMode)
-        getData()
+        changeIdleCheck() // true to false
     }
 
     fun getSelection() = when (repository.getExchange()) {
         "Coinone" -> 0
         "Bithumb" -> 1
         else -> 2 // "Upbit"
+    }
+
+    fun changeIdleCheck() {
+        repository.putIdleCheck(!repository.getIdleCheck())
+
+        if (!repository.getIdleCheck())
+            getData()
     }
 
     private fun putSortMode(sortMode: Int) = repository.putSortMode(sortMode)

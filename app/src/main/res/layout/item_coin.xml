@@ -4,14 +4,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <data>
         <variable
-            name="viewHolder"
-            type="org.techtown.cryptoculus.view.MainAdapter.ViewHolder" />
-        <variable
             name="coinInfo"
             type="org.techtown.cryptoculus.repository.model.CoinInfo" />
         <variable
-            name="clicked"
-            type="Boolean" />
+            name="coinNameKorean"
+            type="String" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -59,17 +56,15 @@
                         android:id="@+id/textView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
+                        android:text='@{coinInfo.coinName + " / " + coinNameKorean}'
                         android:gravity="left"
                         android:maxLines="1"
-                        android:text='@{coinInfo.coinName + " / " + viewHolder.getCoinNameKorean(coinInfo.coinName)}'
                         android:textSize="20sp" />
 
                     <TextView
                         android:id="@+id/textView2"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:gravity="left"
                         android:text='@{coinInfo.ticker.close + "원"}'
                         android:textSize="16sp" />
@@ -107,7 +102,6 @@
                 android:id="@+id/linearLayout2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:onClick="@{() -> viewHolder.showDialog(coinInfo.coinName)}"
                 android:orientation="vertical"
                 android:visibility="gone">
 
@@ -120,7 +114,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
-                    <!-- 이 부분 터치하면 차트 연결할지 묻는 다이얼로그 띄우는 걸로-->
 
                     <LinearLayout
                         android:layout_width="match_parent"

@@ -39,7 +39,7 @@ class PreferencesViewModel(application: Application) : ViewModel() {
     
     // 첫 실행이면 당연히 DB에 저장된 게 없다
     // 근데 첫 실행 아니어도 못 불러온다
-    private fun getData() = addDisposable(repository.getAllByExchangeAsSingle(repository.getExchange())
+    private fun getData() = addDisposable(repository.getAllAsSingle()
         .subscribeOn(Schedulers.io())
         .observeOn(AndroidSchedulers.mainThread())
         .map {
@@ -66,43 +66,38 @@ class PreferencesViewModel(application: Application) : ViewModel() {
 
     // 전체 체크 눌렀을 때
     @RequiresApi(Build.VERSION_CODES.N)
-    fun changeAllChecks(coinInfos: ArrayList<CoinInfo>, checkAll: Boolean): ArrayList<CoinInfo> {
+    fun changeCoinViewCheckAll(coinInfos: ArrayList<CoinInfo>, checkAll: Boolean): ArrayList<CoinInfo> {
         coinInfos.replaceAll {
             it.coinViewCheck = !checkAll
             it
         }
-        updateAll(coinInfos)
         this.checkAll.value = !checkAll
+        updateAll(!checkAll)
 
         return coinInfos
     }
 
     fun updateCoinViewCheck(coinName: String) {
-        val coinInfoTemp = getCoinInfo(repository.getExchange(), coinName)
-
-        coinInfoTemp.coinViewCheck = !coinInfoTemp.coinViewCheck
-        update(coinInfoTemp)
+        update(coinName)
 
         if (checkAll.value!!)
             checkAll.value = false
 
         else {
-            val coinInfosTemp = repository.getAllByExchange(repository.getExchange())
+            val coinViewChecks = repository.getCoinViewChecks()
 
-            for (i in coinInfosTemp.indices) {
-                if (i < coinInfosTemp.size - 1 && !coinInfosTemp[i].coinViewCheck)
+            for (i in coinViewChecks.indices) {
+                if (i < coinViewChecks.size - 1 && !coinViewChecks[i])
                     break
-                if (i == coinInfosTemp.size - 1 && coinInfosTemp[i].coinViewCheck)
+                if (i == coinViewChecks.size - 1 && coinViewChecks[i])
                     checkAll.value = true
             }
         }
     }
 
-    private fun getCoinInfo(exchange: String, coinName: String) = repository.getCoinInfo(exchange, coinName)
+    private fun update(coinName: String) = repository.updateCoinViewCheck(coinName)
 
-    private fun update(coinInfo: CoinInfo) = repository.update(coinInfo)
-
-    private fun updateAll(coinInfos: ArrayList<CoinInfo>) = repository.updateAll(coinInfos.toList())
+    private fun updateAll(checkAll: Boolean) = repository.updateCoinViewCheckAll(checkAll)
 
     private fun addDisposable(disposable: Disposable) = compositeDisposable.add(disposable)
 

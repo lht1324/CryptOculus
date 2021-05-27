@@ -14,6 +14,8 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.jakewharton.rxbinding4.view.clicks
+import com.jakewharton.rxbinding4.widget.textChanges
 import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.databinding.FragmentPreferencesBinding
 import org.techtown.cryptoculus.viewmodel.PreferencesViewModel
@@ -77,26 +79,24 @@ class PreferencesFragment(private val application: Application) : Fragment() {
                 addItemDecoration(RecyclerViewDecoration(30))
             }
 
-            editText.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-
-                override fun onTextChanged(charSequence: CharSequence?, p1: Int, p2: Int, p3: Int) {
-                    if (preferencesAdapter.coinInfos.isNotEmpty()) // 이 조건을 안 넣으면 비동기 처리 중이라서 어댑터 내의 Array가 비었을 때도 텍스트 변경을 관찰한다.
-                        preferencesAdapter.filter.filter(charSequence)
+            editText.apply {
+                textChanges().subscribe {
+                    if (preferencesAdapter.coinInfos.isNotEmpty())
+                        preferencesAdapter.filter.filter(it)
                 }
 
-                override fun afterTextChanged(p0: Editable?) {}
-            })
+                setOnKeyListener { _, keyCode, _ -> keyCode == KeyEvent.KEYCODE_ENTER }
+            }
 
             checkedTextView.apply {
                 viewModel.getCheckAll().observe(viewLifecycleOwner, { // 이게 문제 아냐?
                     isChecked = it
                 })
 
-                setOnClickListener {
+                clicks().subscribe {
                     if (editText.text.isNotBlank())
                         editText.text.clear()
-                    preferencesAdapter.setItems(viewModel.changeAllChecks(preferencesAdapter.coinInfos, isChecked))
+                    preferencesAdapter.setItems(viewModel.changeCoinViewCheckAll(preferencesAdapter.coinInfos, isChecked))
                 }
             }
         }

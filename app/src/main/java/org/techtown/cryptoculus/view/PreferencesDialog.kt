@@ -13,6 +13,7 @@ import android.widget.ArrayAdapter
 import android.widget.ListPopupWindow
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.MutableLiveData
+import com.jakewharton.rxbinding4.view.clicks
 import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.databinding.DialogPreferencesBinding
 
@@ -59,7 +60,7 @@ class PreferencesDialog(private val mContext: Context, var sortMode: Int) : Dial
                 }
             }
             // textView2.setBackgroundColor(R.drawable.text_click)
-            textView2.setOnClickListener {
+            textView2.clicks().subscribe {
                 mode = 1
                 this@PreferencesDialog.dismiss()
             }

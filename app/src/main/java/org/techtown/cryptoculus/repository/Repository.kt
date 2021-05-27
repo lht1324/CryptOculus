@@ -6,13 +6,21 @@ import org.techtown.cryptoculus.repository.model.CoinInfo
 import retrofit2.Response
 
 interface Repository {
-    fun getData(exchange: String): Single<Response<Any>>
+    fun getData(): Single<Response<Any>>
 
-    fun getAllByExchangeAsSingle(exchange: String): Single<List<CoinInfo>>
+    fun getAllAsSingle(): Single<List<CoinInfo>>
+
+    fun getAll(): List<CoinInfo>
 
     fun getAllByExchange(exchange: String): List<CoinInfo>
 
-    fun getCoinInfo(exchange: String, coinName: String): CoinInfo
+    fun getCoinInfo(coinName: String): CoinInfo
+
+    fun getCoinViewCheck(coinName: String): Boolean
+
+    fun getCoinViewChecks(): List<Boolean>
+
+    fun getClicked(coinName: String): Boolean
 
     fun insert(coinInfo: CoinInfo)
 
@@ -21,6 +29,14 @@ interface Repository {
     fun update(coinInfo: CoinInfo)
 
     fun updateAll(coinInfos: List<CoinInfo>)
+
+    fun updateCoinViewCheck(coinName: String)
+
+    fun updateCoinViewCheckAll(checkAll: Boolean)
+
+    fun updateClicked(coinName: String)
+
+    fun refreshClickedAll(exchange: String)
 
     fun delete(coinInfo: CoinInfo)
 
@@ -31,4 +47,8 @@ interface Repository {
     fun getSortMode(): Int
 
     fun putSortMode(sortMode: Int)
+
+    fun getIdleCheck(): Boolean
+
+    fun putIdleCheck(idleCheck: Boolean)
 }

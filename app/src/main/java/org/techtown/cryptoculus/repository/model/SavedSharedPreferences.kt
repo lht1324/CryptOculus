@@ -10,6 +10,10 @@ interface SavedSharedPreferences {
     fun getSortMode(): Int
 
     fun putSortMode(value: Int)
+
+    fun getIdleCheck(): Boolean
+
+    fun putIdleCheck(value: Boolean)
 }
 
 class SavedSharedPreferencesImpl(private val preferences: SharedPreferences) : SavedSharedPreferences {
@@ -20,4 +24,8 @@ class SavedSharedPreferencesImpl(private val preferences: SharedPreferences) : S
     override fun getSortMode() = preferences.getInt("sortMode", 0)
 
     override fun putSortMode(value: Int) = preferences.edit().putInt("sortMode", value).apply()
+
+    override fun getIdleCheck() = preferences.getBoolean("idleCheck", true)
+
+    override fun putIdleCheck(value: Boolean) = preferences.edit().putBoolean("idleCheck", value).apply()
 }

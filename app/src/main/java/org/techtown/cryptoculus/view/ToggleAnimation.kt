@@ -5,49 +5,53 @@ import android.view.ViewGroup
 import android.view.animation.Animation
 import android.view.animation.Transformation
 
-object ToggleAnimation {
-    fun expand(view: View) = view.startAnimation(expandAction(view))
+class ToggleAnimation {
+    companion object {
 
-    private fun expandAction(view: View): Animation {
-        view.measure(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        val height = view.measuredHeight
+        fun expand(view: View) = view.startAnimation(expandAction(view))
 
-        view.layoutParams.height = 0
-        view.visibility = View.VISIBLE
+        private fun expandAction(view: View): Animation {
+            view.measure(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            val height = view.measuredHeight
 
-        val animation = object : Animation() {
-            override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
-                view.layoutParams.height = if (interpolatedTime == 1f) ViewGroup.LayoutParams.WRAP_CONTENT
-                else (height * interpolatedTime).toInt()
+            view.layoutParams.height = 0
+            view.visibility = View.VISIBLE
 
-                view.requestLayout()
+            val animation = object : Animation() {
+                override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
+                    view.layoutParams.height = if (interpolatedTime == 1f) ViewGroup.LayoutParams.WRAP_CONTENT
+                    else (height * interpolatedTime).toInt()
+
+                    view.requestLayout()
+                }
             }
+
+            animation.duration = 500
+
+            view.startAnimation(animation)
+
+            return animation
         }
 
-        animation.duration = 500
+        fun collapse(view: View) {
+            val height = view.measuredHeight
 
-        view.startAnimation(animation)
-
-        return animation
-    }
-
-    fun collapse(view: View) {
-        val height = view.measuredHeight
-
-        val animation = object : Animation() {
-            override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
-                if (interpolatedTime == 1f)
-                    view.visibility = View.GONE
-                else {
-                    view.apply {
-                        layoutParams.height = (height - (height * interpolatedTime)).toInt()
-                        requestLayout()
+            val animation = object : Animation() {
+                override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
+                    if (interpolatedTime == 1f)
+                        view.visibility = View.GONE
+                    else {
+                        view.apply {
+                            layoutParams.height = (height - (height * interpolatedTime)).toInt()
+                            requestLayout()
+                        }
                     }
                 }
             }
-        }
 
-        animation.duration = 500
-        view.startAnimation(animation)
+            animation.duration = 500
+
+            view.startAnimation(animation)
+        }
     }
 }

@@ -1,11 +1,16 @@
 package org.techtown.cryptoculus.viewmodel
 
 import android.app.Application
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import io.reactivex.Observable
 import org.techtown.cryptoculus.repository.RepositoryImpl
 import org.techtown.cryptoculus.repository.model.CoinInfo
 
+@RequiresApi(Build.VERSION_CODES.N)
 class SortingViewModel(application: Application) : ViewModel() {
     private val repository by lazy {
         RepositoryImpl(application)
@@ -28,6 +33,9 @@ class SortingViewModel(application: Application) : ViewModel() {
                 else -> o2.ticker.changeRate.toDouble().compareTo(o1.ticker.changeRate.toDouble()) // 등락률 내림차순
             }
         }
+
         return coinInfos
     }
+
+    private fun println(data: String) = Log.d("SortingViewModel", data)
 }

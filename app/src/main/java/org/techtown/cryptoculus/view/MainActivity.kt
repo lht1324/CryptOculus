@@ -4,10 +4,8 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
-import android.os.Build
+import android.os.*
 import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import android.os.StrictMode
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -24,16 +22,18 @@ import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
+import com.jakewharton.rxbinding4.widget.textChanges
 import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.databinding.ActivityMainBinding
 import org.techtown.cryptoculus.viewmodel.MainViewModel
 import org.techtown.cryptoculus.viewmodel.SortingViewModel
+import java.util.*
+import kotlin.collections.ArrayList
 
 @RequiresApi(Build.VERSION_CODES.N)
 class MainActivity : AppCompatActivity() {
     // 고칠 것
     // 파일 저장 권한
-    // 터치한 곳에 버튼 넣어서 거래소 차트로 연결해주기
     // 자동으로 새로 받아오기
     private lateinit var binding: ActivityMainBinding
     private lateinit var callback: OnBackPressedCallback
@@ -41,8 +41,6 @@ class MainActivity : AppCompatActivity() {
         MainAdapter(this)
     }
     private var backPressedLast: Long = 0
-    // private lateinit var mainViewModel: MainViewModel
-    // private lateinit var sortingViewModel: SortingViewModel
     private val mainViewModel by lazy {
         ViewModelProvider(this, MainViewModel.Factory(application)).get(MainViewModel::class.java)
     }
@@ -138,6 +136,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun init() {
+        mainAdapter.setHasStableIds(true)
+        
         binding.apply {
             recyclerView.apply {
                 adapter = mainAdapter
@@ -145,34 +145,30 @@ class MainActivity : AppCompatActivity() {
             }
 
             swipeRefreshLayout.setOnRefreshListener {
-                getData()
+                notIdleExecute()
                 swipeRefreshLayout.isRefreshing = false
             }
 
-            editText.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-
-                override fun onTextChanged(charSequence: CharSequence?, p1: Int, p2: Int, p3: Int) {
+            editText.apply {
+                textChanges().subscribe {
                     mainAdapter.apply {
-                        if (coinInfos.isNotEmpty()) { // 이 조건을 안 넣으면 비동기 처리 중이라서 어댑터 내의 Array가 비었을 때도 텍스트 변경을 관찰한다.
-                            filter.filter(charSequence)
+                        if (it.isNotBlank())
+                            mainViewModel.changeIdleCheck()
+
+                        if (coinInfos.isNotEmpty()) {
+                            filter.filter(it)
                             filteredCoinInfos = sortingViewModel.sortCoinInfos(filteredCoinInfos)
                         }
                     }
                 }
 
-                override fun afterTextChanged(p0: Editable?) {}
-            })
+                setOnKeyListener { _, keyCode, _ -> keyCode == KeyEvent.KEYCODE_ENTER }
+            }
         }
 
-        // 3초마다 받아오는 기능 만들 때 레이아웃 초기화되는 거 없애야 한다
         mainViewModel.getCoinInfos().observe(this, { coinInfos ->
             mainAdapter.setItems(sortingViewModel.sortCoinInfos(coinInfos))
             showLoadingScreen(false)
-        })
-
-        mainViewModel.getNews().observe(this, { news ->
-            openNewsDialog(news)
         })
 
         mainAdapter.openChart.observe(this, { coinName ->
@@ -181,6 +177,10 @@ class MainActivity : AppCompatActivity() {
                 1 -> "https://m.bithumb.com/trade/chart/${coinName}_KRW"
                 else -> "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-$coinName&tab=chart"
             })))
+        })
+
+        mainAdapter.clickedItem.observe(this, { coinName ->
+            mainViewModel.updateClicked(coinName)
         })
     }
 
@@ -196,8 +196,10 @@ class MainActivity : AppCompatActivity() {
             )
 
     private fun openPreferencesFragment() {
-        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
-        supportActionBar!!.title = "보고 싶은 코인을 선택하세요."
+        supportActionBar!!.apply {
+            setDisplayHomeAsUpEnabled(true)
+            title = "보고 싶은 코인을 선택하세요."
+        }
 
         supportFragmentManager
                 .beginTransaction()
@@ -212,17 +214,7 @@ class MainActivity : AppCompatActivity() {
 
         showLoadingScreen(true)
         supportFragmentManager.popBackStack()
-        getData()
-    }
-
-    private fun openNewsDialog(news: ArrayList<Any>) = NewsDialog(this).apply {
-        println("openNewsDialog() is executed.")
-        if (news[0] == "newList" || news[0] == "deList")
-            news.add(news[1])
-        else {
-            news.add(news[1])
-            news.add(news[2])
-        }
+        notIdleExecute()
     }
 
     private fun openPreferencesDialog() = PreferencesDialog(this, mainViewModel.getSortMode()).apply {
@@ -236,6 +228,25 @@ class MainActivity : AppCompatActivity() {
             if (it != mainViewModel.getSortMode())
                 updateSortMode(it)
         })
+    }
+
+    private fun notIdleExecute() {
+        if (binding.editText.text.isNotBlank())
+            binding.editText.text.clear()
+        showLoadingScreen(true)
+        mainViewModel.changeIdleCheck()
+    }
+
+    private fun updateSortMode(sortMode: Int) {
+        showLoadingScreen(true)
+        binding.recyclerView.adapter = mainAdapter
+        mainViewModel.updateSortMode(sortMode)
+    }
+
+    private fun changeExchange(position: Int) {
+        showLoadingScreen(true)
+        binding.recyclerView.adapter = mainAdapter // 리사이클러뷰 거래소 첫 부분부터 보여주기
+        mainViewModel.changeExchange(position)
     }
 
     private fun showLoadingScreen(show: Boolean) = binding.apply {
@@ -257,27 +268,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun getData() {
-        if (binding.editText.text.isNotBlank())
-            binding.editText.text.clear()
-        showLoadingScreen(true)
-        mainViewModel.getData()
-    }
-
-    private fun updateSortMode(sortMode: Int) {
-        showLoadingScreen(true)
-        binding.recyclerView.adapter = mainAdapter
-        mainViewModel.updateSortMode(sortMode)
-    }
-
-    private fun changeExchange(position: Int) {
-        showLoadingScreen(true)
-        binding.recyclerView.adapter = mainAdapter // 리사이클러뷰 거래소 첫 부분부터 보여주기
-        mainViewModel.changeExchange(position)
-    }
-
     private fun println(data: String) = Log.d("MainAcitivity", data)
 
-    private fun showToast(data: String) = Toast
-            .makeText(this@MainActivity, data, Toast.LENGTH_SHORT).show()
+    private fun showToast(data: String) = Toast.makeText(this@MainActivity, data, Toast.LENGTH_SHORT).show()
 }

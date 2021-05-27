@@ -13,6 +13,6 @@ data class TickerBithumb(
         override var min: String,
         @SerializedName("prev_closing_price")
         override var yesterdayClose: String,
-        @SerializedName("units_traded")
+        @SerializedName("units_traded_24H")
         override var tradeVolume: String
 ) : Ticker()

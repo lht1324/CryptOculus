@@ -8,6 +8,7 @@ import android.widget.Filter
 import android.widget.Filterable
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
+import com.jakewharton.rxbinding4.view.clicks
 import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.databinding.ItemPreferencesBinding
 import org.techtown.cryptoculus.repository.model.CoinInfo
@@ -23,11 +24,7 @@ class PreferencesAdapter(private val mContext: Context) : RecyclerView.Adapter<P
         val inflater = LayoutInflater.from(parent.context)
         val binding = ItemPreferencesBinding.inflate(inflater, parent, false)
 
-        return ViewHolder(binding,
-            onItemClicked = { coinName ->
-                clickedItem.value = coinName
-            }
-        )
+        return ViewHolder(binding)
     }
 
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
@@ -36,38 +33,42 @@ class PreferencesAdapter(private val mContext: Context) : RecyclerView.Adapter<P
 
     override fun getItemCount() = filteredCoinInfos.size
 
-    override fun getItemId(position: Int) = filteredCoinInfos[position].coinName.hashCode().toLong()
+    override fun getItemId(position: Int) = filteredCoinInfos[position].exchange.hashCode().toLong() + filteredCoinInfos[position].coinName.hashCode().toLong()
 
-    inner class ViewHolder(private val binding: ItemPreferencesBinding,
-        private val onItemClicked: (String) -> Unit) : RecyclerView.ViewHolder(binding.root) {
+    inner class ViewHolder(private val binding: ItemPreferencesBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(coinInfo: CoinInfo) = binding.apply {
                 viewHolder = this@ViewHolder
                 this.coinInfo = coinInfo
 
                 val drawableId = root.resources.getIdentifier(
-                        coinInfo.coinName.toLowerCase(),
-                        "drawable",
-                        root.context.packageName)
+                    when (coinInfo.coinName) {
+                        "1INCH" -> "inch"
+                        "CON" -> "conun"
+                        "TRUE" -> "truechain"
+                        else -> coinInfo.coinName.toLowerCase()
+                    },
+                    "drawable",
+                    root.context.packageName)
 
                 imageView.setImageResource(
                         if (drawableId == 0)
-                            R.drawable.basic
+                            R.drawable.default_image
                         else
                             drawableId
                 )
-            }
 
-        fun changeCoinView(coinInfo: CoinInfo) {
-            onItemClicked(coinInfo.coinName)
-            coinInfos[coinInfos.indexOf(coinInfo)].coinViewCheck = !coinInfos[coinInfos.indexOf(coinInfo)].coinViewCheck
-            binding.checkedTextView.toggle()
-        }
+                checkedTextView.clicks().subscribe {
+                    clickedItem.value = coinInfo.coinName
+                    coinInfos[coinInfos.indexOf(coinInfo)].coinViewCheck = !coinInfos[coinInfos.indexOf(coinInfo)].coinViewCheck
+                    checkedTextView.toggle()
+                }
+            }
 
         fun getCoinNameKorean(coinName: String): String {
             val id = binding.root.resources.getIdentifier(
-                    coinName,
-                    "string",
-                    binding.root.context.packageName
+                if (coinName != "1INCH") coinName else "INCH",
+                "string",
+                binding.root.context.packageName
             )
 
             return if (id != 0)
@@ -89,7 +90,7 @@ class PreferencesAdapter(private val mContext: Context) : RecyclerView.Adapter<P
                 if (coinInfos.isNotEmpty()) {
                     for (i in coinInfos.indices) {
                         val id = mContext.resources.getIdentifier(
-                            coinInfos[i].coinName,
+                            if (coinInfos[i].coinName != "1INCH") coinInfos[i].coinName else "INCH",
                             "string",
                             "org.techtown.cryptoculus"
                         )

@@ -1,14 +1,11 @@
 package org.techtown.cryptoculus.repository.model
 
-import androidx.lifecycle.LiveData
 import androidx.room.*
 import androidx.room.Dao
 import io.reactivex.Single
 
 @Dao
 interface CoinInfoDao {
-    // where exchange is :exchange
-    // 이거 지우니까 제대로 된다
     @Query("Select * from coinInfoTable where exchange is :exchange")
     fun getAllByExchangeAsSingle(exchange: String): Single<List<CoinInfo>>
 
@@ -18,10 +15,19 @@ interface CoinInfoDao {
     @Query("Select * from coinInfoTable where exchange is :exchange and coinName is :coinName")
     fun getCoinInfo(exchange: String, coinName: String): CoinInfo
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Query("Select coinViewCheck from coinInfoTable where exchange is :exchange and coinName is :coinName")
+    fun getCoinViewCheck(exchange: String, coinName: String): Boolean
+
+    @Query("Select coinViewCheck from coinInfoTable where exchange is :exchange")
+    fun getCoinViewChecks(exchange: String): List<Boolean>
+
+    @Query("Select clicked from coinInfoTable where exchange is :exchange and coinName is :coinName")
+    fun getClicked(exchange: String, coinName: String): Boolean
+
+    @Insert
     fun insert(coinInfo: CoinInfo)
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert
     fun insertAll(coinInfos: List<CoinInfo>)
 
     // coinViewCheck 업데이트 됐을 때 쓰겠지
@@ -31,8 +37,21 @@ interface CoinInfoDao {
     @Update(onConflict = OnConflictStrategy.REPLACE)
     fun updateAll(coinInfos: List<CoinInfo>)
 
-    // 상장폐지 되었을 때 써야 한다
-    // exchange와 coinName이 있는데 새로 받은 거에 exchange 있고 coinName이 없을 때?
+    @Query("Update coinInfoTable set coinViewCheck=:coinViewCheck where exchange is :exchange and coinName is :coinName")
+    fun updateCoinViewCheck(coinViewCheck: Boolean, exchange: String, coinName: String)
+
+    @Query("Update coinInfoTable set coinViewCheck=:coinViewCheck where exchange is :exchange")
+    fun updateCoinViewCheckAll(coinViewCheck: Boolean, exchange: String)
+
+    @Query("Update coinInfoTable set clicked=:clicked where exchange is :exchange and coinName is :coinName")
+    fun updateClicked(clicked: Boolean, exchange: String, coinName: String)
+
+    @Query("Update coinInfoTable set clicked=:clicked where exchange is :exchange")
+    fun updateClickedAll(clicked: Boolean, exchange: String)
+
+    @Query("Update coinInfoTable set clicked=0 where exchange is :exchange")
+    fun refreshClickedAll(exchange: String)
+
     @Delete
     fun delete(coinInfo: CoinInfo)
 }
