@@ -13,8 +13,10 @@
     <string name="search">검색</string>
     <string name="option">옵션</string>
     <string name="help" >도움말</string>
-    <string name="chooseSorting">정렬</string>
-    <string name="chooseCoin">보고 싶은 코인 선택</string>
+    <string name="skip" >✓</string>
+    <string name="next" >></string>
+    <string name="optionSorting">정렬</string>
+    <string name="optionCoin">보고 싶은 화폐 선택</string>
     <string name="BTC">비트코인</string>
     <string name="BCH">비트코인 캐시</string>
     <string name="EOS">이오스</string>

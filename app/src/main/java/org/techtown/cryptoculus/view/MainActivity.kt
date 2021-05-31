@@ -93,7 +93,6 @@ class MainActivity : AppCompatActivity() {
         callback.remove()
     }
 
-    @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.option_menu, menu)
 
@@ -117,6 +116,7 @@ class MainActivity : AppCompatActivity() {
                         binding.editText.text.clear()
                     changeExchange(position)
                     changeLayout(position)
+                    binding.recyclerView.adapter = mainAdapter // 거래소를 바꿨을 때 기존 데이터가 보여지는 현상 방지
                 }
 
                 override fun onNothingSelected(p0: AdapterView<*>?) { }
@@ -129,7 +129,7 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.option -> openPreferencesDialog()
-            // R.id.help -> { }
+            R.id.help -> startActivity(Intent(this, HelpActivity::class.java))
         }
 
         return super.onOptionsItemSelected(item)
@@ -198,7 +198,7 @@ class MainActivity : AppCompatActivity() {
     private fun openPreferencesFragment() {
         supportActionBar!!.apply {
             setDisplayHomeAsUpEnabled(true)
-            title = "보고 싶은 코인을 선택하세요."
+            title = "보고 싶은 화폐를 선택하세요."
         }
 
         supportFragmentManager

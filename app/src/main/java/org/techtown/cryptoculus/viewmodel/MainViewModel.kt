@@ -89,7 +89,8 @@ class MainViewModel(application: Application) : ViewModel(){
             getCoinViewCheck(it.coinName)
         }
         .map {
-            it.clicked = if (repository.getIdleCheck()) repository.getClicked(it.coinName) else false
+            if (repository.getIdleCheck())
+                it.clicked = repository.getClicked(it.coinName)
             it
         }.toList()
         .observeOn(AndroidSchedulers.mainThread())

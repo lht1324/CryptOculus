@@ -61,7 +61,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="start|center_vertical"
-                    android:text="@string/chooseSorting"
+                    android:text="@string/optionSorting"
                     android:textSize="18sp" />
 
                 <Spinner
@@ -80,7 +80,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:text="@string/chooseCoin"
+                android:text="@string/optionCoin"
                 android:textColor="@drawable/text_click"
                 android:textSize="18sp" />
 
