@@ -81,12 +81,12 @@ class PreferencesAdapter(private val mContext: Context) : RecyclerView.Adapter<P
     override fun getFilter() = object : Filter() {
         override fun performFiltering(constraint: CharSequence): FilterResults {
             val charString = constraint.toString()
+            val filteredList = ArrayList<CoinInfo>()
 
-            filteredCoinInfos = if (charString.isEmpty())
-                coinInfos
+            if (charString.isEmpty())
+                filteredList.addAll(coinInfos)
+
             else {
-                val filteredList = ArrayList<CoinInfo>()
-
                 if (coinInfos.isNotEmpty()) {
                     for (i in coinInfos.indices) {
                         val id = mContext.resources.getIdentifier(
@@ -103,13 +103,15 @@ class PreferencesAdapter(private val mContext: Context) : RecyclerView.Adapter<P
                 }
                 filteredList
             }
+
             val filterResults = FilterResults()
-            filterResults.values = filteredCoinInfos
+            filterResults.values = filteredList
             return filterResults
         }
 
         override fun publishResults(constraint: CharSequence, results: FilterResults) {
-            filteredCoinInfos  = results.values as ArrayList<CoinInfo>
+            filteredCoinInfos = ArrayList()
+            filteredCoinInfos.addAll(results.values as ArrayList<CoinInfo>)
             notifyDataSetChanged()
         }
     }

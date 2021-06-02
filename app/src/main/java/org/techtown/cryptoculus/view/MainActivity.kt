@@ -5,36 +5,34 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.*
-import androidx.appcompat.app.AppCompatActivity
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log
 import android.view.*
+import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.ListPopupWindow
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.AppCompatSpinner
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.SimpleItemAnimator
 import com.jakewharton.rxbinding4.widget.textChanges
 import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.databinding.ActivityMainBinding
 import org.techtown.cryptoculus.viewmodel.MainViewModel
 import org.techtown.cryptoculus.viewmodel.SortingViewModel
 import java.util.*
-import kotlin.collections.ArrayList
+
 
 @RequiresApi(Build.VERSION_CODES.N)
 class MainActivity : AppCompatActivity() {
     // 고칠 것
     // 파일 저장 권한
-    // 자동으로 새로 받아오기
+    // DB에 Rx 사용
     private lateinit var binding: ActivityMainBinding
     private lateinit var callback: OnBackPressedCallback
     private val mainAdapter: MainAdapter by lazy {
@@ -49,6 +47,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(R.style.AppTheme)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -117,6 +116,12 @@ class MainActivity : AppCompatActivity() {
                     changeExchange(position)
                     changeLayout(position)
                     binding.recyclerView.adapter = mainAdapter // 거래소를 바꿨을 때 기존 데이터가 보여지는 현상 방지
+
+                    if (binding.editText.isFocused) {
+                        if ((getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).isAcceptingText)
+                            closeKeyboard()
+                        binding.editText.clearFocus()
+                    }
                 }
 
                 override fun onNothingSelected(p0: AdapterView<*>?) { }
@@ -147,6 +152,12 @@ class MainActivity : AppCompatActivity() {
             swipeRefreshLayout.setOnRefreshListener {
                 notIdleExecute()
                 swipeRefreshLayout.isRefreshing = false
+
+                if (binding.editText.isFocused) {
+                    if ((getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).isAcceptingText)
+                        closeKeyboard()
+                    binding.editText.clearFocus()
+                }
             }
 
             editText.apply {
@@ -267,6 +278,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    private fun closeKeyboard() = (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
+        .hideSoftInputFromWindow(currentFocus!!.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
 
     private fun println(data: String) = Log.d("MainAcitivity", data)
 

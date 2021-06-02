@@ -59,11 +59,11 @@ class HelpActivity : AppCompatActivity() {
             // 다음 버튼 ( > )
             buttonNext.clicks().subscribe {
                 viewPager.apply {
-                    if (currentItem < pagerAdapter.fragments.size)
-                        setCurrentItem(currentItem + 1, true)
-
                     if (currentItem == pagerAdapter.fragments.size - 1)
                         finish()
+                    
+                    if (currentItem < pagerAdapter.fragments.size)
+                        setCurrentItem(currentItem + 1, true)
                 }
             }
 

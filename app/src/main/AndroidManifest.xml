@@ -13,9 +13,11 @@
         android:theme="@style/Theme.CryptOculusMVVM">
 
         <!-- HelpActivity -->
-        <activity android:name="org.techtown.cryptoculus.view.HelpActivity"/>
+        <activity android:name="org.techtown.cryptoculus.view.HelpActivity"
+            android:theme="@style/AppTheme"/>
         <!-- MainActivity -->
-        <activity android:name="org.techtown.cryptoculus.view.MainActivity">
+        <activity android:name="org.techtown.cryptoculus.view.MainActivity"
+            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
