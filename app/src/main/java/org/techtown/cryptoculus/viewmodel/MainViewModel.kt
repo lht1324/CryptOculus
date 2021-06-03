@@ -7,6 +7,8 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import io.reactivex.Completable
+import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -47,13 +49,13 @@ class MainViewModel(application: Application) : ViewModel(){
 
     override fun onCleared() {
         if (repository.getAllByExchange("Coinone").isNotEmpty())
-            repository.refreshClickedAll("Coinone")
+            refreshClickedAll("Coinone")
 
         if (repository.getAllByExchange("Bithumb").isNotEmpty())
-            repository.refreshClickedAll("Bithumb")
+            refreshClickedAll("Bithumb")
 
         if (repository.getAllByExchange("Upbit").isNotEmpty())
-            repository.refreshClickedAll("Upbit")
+            refreshClickedAll("Upbit")
 
         timer.cancel()
         compositeDisposable.dispose()
@@ -79,10 +81,10 @@ class MainViewModel(application: Application) : ViewModel(){
 
             it
         }
-        .toObservable()
+        .toFlowable()
         .observeOn(Schedulers.computation())
         .flatMap {
-            Observable.fromIterable(it)
+            Flowable.fromIterable(it)
         }
         .observeOn(Schedulers.io())
         .filter {
@@ -121,15 +123,15 @@ class MainViewModel(application: Application) : ViewModel(){
         }
     }
 
-    private fun insert(coinInfo: CoinInfo) = repository.insert(coinInfo)
+    private fun insert(coinInfo: CoinInfo) = completableTemplate(repository.insert(coinInfo))
 
-    private fun insertAll(coinInfos: List<CoinInfo>) = repository.insertAll(coinInfos)
+    private fun insertAll(coinInfos: List<CoinInfo>) = completableTemplate(repository.insertAll(coinInfos))
 
-    private fun delete(coinInfo: CoinInfo) = repository.delete(coinInfo)
+    private fun delete(coinInfo: CoinInfo) = completableTemplate(repository.delete(coinInfo))
+
+    fun updateClicked(coinName: String) = completableTemplate(repository.updateClicked(coinName))
 
     private fun getCoinViewCheck(coinName: String) = repository.getCoinViewCheck(coinName)
-
-    fun updateClicked(coinName: String) = repository.updateClicked(coinName)
 
     fun changeExchange(position: Int) {
         repository.putExchange(when (position) {
@@ -157,6 +159,13 @@ class MainViewModel(application: Application) : ViewModel(){
         if (!repository.getIdleCheck())
             getData()
     }
+
+    private fun refreshClickedAll(exchange: String) = completableTemplate(repository.refreshClickedAll(exchange))
+
+    private fun completableTemplate(argFun: Completable) = addDisposable(argFun
+        .subscribeOn(Schedulers.io())
+        .observeOn(Schedulers.io())
+        .subscribe())
 
     private fun putSortMode(sortMode: Int) = repository.putSortMode(sortMode)
 

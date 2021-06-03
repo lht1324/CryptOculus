@@ -36,10 +36,6 @@ class RepositoryImpl(private val application: Application) : Repository{
 
     override fun insertAll(coinInfos: List<CoinInfo>) = coinInfoDao.insertAll(coinInfos)
 
-    override fun update(coinInfo: CoinInfo) = coinInfoDao.update(coinInfo)
-
-    override fun updateAll(coinInfos: List<CoinInfo>) = coinInfoDao.updateAll(coinInfos)
-
     override fun updateCoinViewCheck(coinName: String) = coinInfoDao.updateCoinViewCheck(!coinInfoDao.getCoinViewCheck(getExchange(), coinName), getExchange(), coinName)
 
     override fun updateCoinViewCheckAll(checkAll: Boolean) = coinInfoDao.updateCoinViewCheckAll(checkAll, getExchange())

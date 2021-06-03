@@ -2,6 +2,7 @@ package org.techtown.cryptoculus.repository.model
 
 import androidx.room.*
 import androidx.room.Dao
+import io.reactivex.Completable
 import io.reactivex.Single
 
 @Dao
@@ -25,33 +26,26 @@ interface CoinInfoDao {
     fun getClicked(exchange: String, coinName: String): Boolean
 
     @Insert
-    fun insert(coinInfo: CoinInfo)
+    fun insert(coinInfo: CoinInfo): Completable
 
     @Insert
-    fun insertAll(coinInfos: List<CoinInfo>)
-
-    // coinViewCheck 업데이트 됐을 때 쓰겠지
-    @Update(onConflict = OnConflictStrategy.REPLACE)
-    fun update(coinInfo: CoinInfo)
-
-    @Update(onConflict = OnConflictStrategy.REPLACE)
-    fun updateAll(coinInfos: List<CoinInfo>)
+    fun insertAll(coinInfos: List<CoinInfo>): Completable
 
     @Query("Update coinInfoTable set coinViewCheck=:coinViewCheck where exchange is :exchange and coinName is :coinName")
-    fun updateCoinViewCheck(coinViewCheck: Boolean, exchange: String, coinName: String)
+    fun updateCoinViewCheck(coinViewCheck: Boolean, exchange: String, coinName: String): Completable
 
     @Query("Update coinInfoTable set coinViewCheck=:coinViewCheck where exchange is :exchange")
-    fun updateCoinViewCheckAll(coinViewCheck: Boolean, exchange: String)
+    fun updateCoinViewCheckAll(coinViewCheck: Boolean, exchange: String): Completable
 
     @Query("Update coinInfoTable set clicked=:clicked where exchange is :exchange and coinName is :coinName")
-    fun updateClicked(clicked: Boolean, exchange: String, coinName: String)
+    fun updateClicked(clicked: Boolean, exchange: String, coinName: String): Completable
 
     @Query("Update coinInfoTable set clicked=:clicked where exchange is :exchange")
-    fun updateClickedAll(clicked: Boolean, exchange: String)
+    fun updateClickedAll(clicked: Boolean, exchange: String): Completable
 
     @Query("Update coinInfoTable set clicked=0 where exchange is :exchange")
-    fun refreshClickedAll(exchange: String)
+    fun refreshClickedAll(exchange: String): Completable
 
     @Delete
-    fun delete(coinInfo: CoinInfo)
+    fun delete(coinInfo: CoinInfo): Completable
 }

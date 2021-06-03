@@ -7,6 +7,7 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
@@ -14,6 +15,7 @@ import io.reactivex.schedulers.Schedulers
 import org.techtown.cryptoculus.repository.RepositoryImpl
 import org.techtown.cryptoculus.repository.model.CoinInfo
 
+@RequiresApi(Build.VERSION_CODES.N)
 class PreferencesViewModel(application: Application) : ViewModel() {
     private val compositeDisposable = CompositeDisposable()
     private val repository by lazy {
@@ -37,8 +39,6 @@ class PreferencesViewModel(application: Application) : ViewModel() {
         super.onCleared()
     }
     
-    // 첫 실행이면 당연히 DB에 저장된 게 없다
-    // 근데 첫 실행 아니어도 못 불러온다
     private fun getData() = addDisposable(repository.getAllAsSingle()
         .subscribeOn(Schedulers.io())
         .observeOn(AndroidSchedulers.mainThread())
@@ -58,14 +58,14 @@ class PreferencesViewModel(application: Application) : ViewModel() {
                 coinInfos.value = it
             },
             { println("onError: ${it.message}") }
-        ))
+        )
+    )
 
     fun getCoinInfos() = coinInfos
 
     fun getCheckAll() = checkAll
 
     // 전체 체크 눌렀을 때
-    @RequiresApi(Build.VERSION_CODES.N)
     fun changeCoinViewCheckAll(coinInfos: ArrayList<CoinInfo>, checkAll: Boolean): ArrayList<CoinInfo> {
         coinInfos.replaceAll {
             it.coinViewCheck = !checkAll
@@ -77,27 +77,34 @@ class PreferencesViewModel(application: Application) : ViewModel() {
         return coinInfos
     }
 
-    fun updateCoinViewCheck(coinName: String) {
-        update(coinName)
+    fun updateCoinViewCheck(coinName: String) = addDisposable(repository.updateCoinViewCheck(coinName)
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(
+            {
+                if (checkAll.value!!)
+                    checkAll.value = false
 
-        if (checkAll.value!!)
-            checkAll.value = false
+                else {
+                    val coinViewChecks = repository.getCoinViewChecks()
 
-        else {
-            val coinViewChecks = repository.getCoinViewChecks()
+                    for (i in coinViewChecks.indices) {
+                        if (i < coinViewChecks.size - 1 && !coinViewChecks[i])
+                            break
+                        if (i == coinViewChecks.size - 1 && coinViewChecks[i])
+                            checkAll.value = true
+                    }
+                }
+            },
+            { println("onError: ${it.message}") }
+        )
+    )
 
-            for (i in coinViewChecks.indices) {
-                if (i < coinViewChecks.size - 1 && !coinViewChecks[i])
-                    break
-                if (i == coinViewChecks.size - 1 && coinViewChecks[i])
-                    checkAll.value = true
-            }
-        }
-    }
-
-    private fun update(coinName: String) = repository.updateCoinViewCheck(coinName)
-
-    private fun updateAll(checkAll: Boolean) = repository.updateCoinViewCheckAll(checkAll)
+    private fun updateAll(checkAll: Boolean) = addDisposable(repository.updateCoinViewCheckAll(checkAll)
+        .subscribeOn(Schedulers.io())
+        .observeOn(Schedulers.io())
+        .subscribe()
+    )
 
     private fun addDisposable(disposable: Disposable) = compositeDisposable.add(disposable)
 

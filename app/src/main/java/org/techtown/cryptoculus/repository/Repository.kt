@@ -1,5 +1,6 @@
 package org.techtown.cryptoculus.repository
 
+import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 import org.techtown.cryptoculus.repository.model.CoinInfo
@@ -22,23 +23,19 @@ interface Repository {
 
     fun getClicked(coinName: String): Boolean
 
-    fun insert(coinInfo: CoinInfo)
+    fun insert(coinInfo: CoinInfo): Completable
 
-    fun insertAll(coinInfos: List<CoinInfo>)
+    fun insertAll(coinInfos: List<CoinInfo>): Completable
 
-    fun update(coinInfo: CoinInfo)
+    fun updateCoinViewCheck(coinName: String): Completable
 
-    fun updateAll(coinInfos: List<CoinInfo>)
+    fun updateCoinViewCheckAll(checkAll: Boolean): Completable
 
-    fun updateCoinViewCheck(coinName: String)
+    fun updateClicked(coinName: String): Completable
 
-    fun updateCoinViewCheckAll(checkAll: Boolean)
+    fun refreshClickedAll(exchange: String): Completable
 
-    fun updateClicked(coinName: String)
-
-    fun refreshClickedAll(exchange: String)
-
-    fun delete(coinInfo: CoinInfo)
+    fun delete(coinInfo: CoinInfo): Completable
 
     fun getExchange(): String
 
