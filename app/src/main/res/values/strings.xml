@@ -223,7 +223,7 @@
     <string name="BIOT">바이오패스포트</string>
     <string name="BMP">비엠피</string>
     <string name="BNT">방코르</string>
-    <string name="BOT">바운스 토큰</string>
+    <string name="AUCTION">바운스 토큰</string>
     <string name="CAD">캔디 프로토콜</string>
     <string name="CAMP">캠프코인</string>
     <string name="CBANK">크립토뱅크</string>
@@ -354,4 +354,12 @@
     <string name="STRK">스트라이크</string>
     <string name="STX">스택스</string>
     <string name="TON">톤</string>
+    <string name="CELR">셀러네트워크</string>
+    <string name="CYCLUB">싸이클럽</string>
+    <string name="DAI">다이</string>
+    <string name="VRA">베라시티</string>
+    <string name="BLY">블로서리</string>
+    <string name="CAKE">팬케이크스왑</string>
+    <string name="GHX">게이머코인</string>
+    <string name="XVS">비너스</string>
 </resources>

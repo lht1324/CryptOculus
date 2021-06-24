@@ -9,6 +9,9 @@
         <variable
             name="coinNameKorean"
             type="String" />
+        <variable
+            name="changeRate"
+            type="String" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -89,7 +92,7 @@
                             android:layout_marginStart="3dp"
                             android:layout_marginLeft="3dp"
                             android:gravity="left"
-                            android:text='@{coinInfo.ticker.changeRate + "%"}'
+                            android:text='@{changeRate}'
                             android:textSize="16sp" />
 
                     </LinearLayout>

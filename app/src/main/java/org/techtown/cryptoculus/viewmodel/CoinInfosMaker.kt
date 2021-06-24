@@ -38,6 +38,7 @@ object CoinInfosMaker {
                     })
                 }
             }
+
             "Bithumb" -> {
                 val gson = Gson()
                 val jsonObject = JSONObject(response.toString().replace("TRUE", "TRUETEMP")).getJSONObject("data") // '=TRUE'를 Boolean으로 인식한다
@@ -53,6 +54,7 @@ object CoinInfosMaker {
                     })
                 }
             }
+
             "Upbit" -> {
                 val tickers = response as ArrayList<Ticker>
 

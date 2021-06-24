@@ -23,6 +23,17 @@ class SortingViewModel(application: Application) : ViewModel() {
     }
 
     fun sortCoinInfos(coinInfos: ArrayList<CoinInfo>): ArrayList<CoinInfo> {
+        val tempCoinInfos = ArrayList<CoinInfo>()
+
+        if (repository.getSortMode() in 4..5) {
+            coinInfos.forEach { // 당일 상장된 화폐는 제거한 뒤 정렬하고 맨 뒤에 붙여준다
+                if (it.ticker.changeRate == "∞") {
+                    tempCoinInfos.add(it)
+                    coinInfos.remove(it)
+                }
+            }
+        }
+
         coinInfos.sortWith { o1, o2 ->
             when (repository.getSortMode()) {
                 0 -> o1.coinName.compareTo(o2.coinName) // 이름 오름차순
@@ -33,6 +44,9 @@ class SortingViewModel(application: Application) : ViewModel() {
                 else -> o2.ticker.changeRate.toDouble().compareTo(o1.ticker.changeRate.toDouble()) // 등락률 내림차순
             }
         }
+
+        if (tempCoinInfos.isNotEmpty())
+            coinInfos += tempCoinInfos
 
         return coinInfos
     }

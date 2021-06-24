@@ -48,6 +48,7 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
         fun bind(coinInfo: CoinInfo) = binding.apply {
             this.coinInfo = coinInfo
             coinNameKorean = getCoinNameKorean(coinInfo.coinName)
+            changeRate = getChangeRate(coinInfo.ticker.changeRate)
 
             val drawableId = root.resources.getIdentifier(
                 when (coinInfo.coinName) {
@@ -60,15 +61,21 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
                 root.context.packageName)
 
             imageView.setImageResource(
-                    if (drawableId == 0) R.drawable.default_image
-                    else drawableId
+                    if (drawableId != 0) drawableId
+                    else R.drawable.default_image
             )
 
-            textView3.setTextColor(when {
-                coinInfo.ticker.changeRate.toDouble() < 0.0 -> Color.rgb(0, 0, 255)
-                coinInfo.ticker.changeRate.toDouble() > 0.0 -> Color.rgb(255, 0, 0)
-                else -> Color.rgb(128, 128, 128)
-            })
+            textView3.setTextColor(
+                if (coinInfo.ticker.changeRate!= "∞") { // 당일 상장되어 전일종가가 없을 때 오류 발생
+                    when {
+                        coinInfo.ticker.changeRate.toDouble() < 0.0 -> Color.rgb(0, 0, 255)
+                        coinInfo.ticker.changeRate.toDouble() > 0.0 -> Color.rgb(255, 0, 0)
+                        else -> Color.rgb(128, 128, 128)
+                    }
+                }
+                else
+                    Color.rgb(110, 202, 243)
+            )
 
             // 뷰홀더의 linearLayout2.visibility가 변경되는 만큼 뷰홀더 자체를 재활용 하면 visibility는 그대로 유지된다
             // clicked는 3초에 1번씩 업데이트 될 때마다 계속 false가 된다
@@ -106,6 +113,11 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
                 else
                     "신규 상장"
         }
+
+        private fun getChangeRate(originalChangeRate: String) = if (originalChangeRate != "∞")
+            "$originalChangeRate%"
+        else
+            "당일 상장"
 
         private fun showDialog(coinName: String): AlertDialog = AlertDialog.Builder(mContext)
                 .setTitle("예를 누르면 거래소 차트 페이지로 이동해요.")

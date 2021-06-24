@@ -32,7 +32,6 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
     // 고칠 것
     // 파일 저장 권한
-    // DB에 Rx 사용
     private lateinit var binding: ActivityMainBinding
     private lateinit var callback: OnBackPressedCallback
     private val mainAdapter: MainAdapter by lazy {
@@ -117,6 +116,7 @@ class MainActivity : AppCompatActivity() {
                     changeLayout(position)
                     binding.recyclerView.adapter = mainAdapter // 거래소를 바꿨을 때 기존 데이터가 보여지는 현상 방지
 
+                    // 검색창에 커서가 찍혔을 때 거래소를 바꾸면 커서와 키보드를 제거
                     if (binding.editText.isFocused) {
                         if ((getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).isAcceptingText)
                             closeKeyboard()

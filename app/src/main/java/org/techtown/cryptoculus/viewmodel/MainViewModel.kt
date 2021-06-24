@@ -15,6 +15,9 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import org.techtown.cryptoculus.pojo.Ticker
+import org.techtown.cryptoculus.pojo.TickerBithumb
+import org.techtown.cryptoculus.pojo.TickerCoinone
+import org.techtown.cryptoculus.pojo.TickerUpbit
 import org.techtown.cryptoculus.repository.RepositoryImpl
 import org.techtown.cryptoculus.repository.model.CoinInfo
 import java.util.*
