@@ -1,32 +1,38 @@
 package org.techtown.cryptoculus.viewmodel
 
 import android.app.Application
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 import io.reactivex.Completable
-import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.pojo.Ticker
-import org.techtown.cryptoculus.pojo.TickerBithumb
-import org.techtown.cryptoculus.pojo.TickerCoinone
-import org.techtown.cryptoculus.pojo.TickerUpbit
 import org.techtown.cryptoculus.repository.RepositoryImpl
 import org.techtown.cryptoculus.repository.model.CoinInfo
+import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
 
-@RequiresApi(Build.VERSION_CODES.N)
-class MainViewModel(application: Application) : ViewModel(){
+class MainViewModel(val application: Application) : ViewModel(){
     private val compositeDisposable = CompositeDisposable()
-    private val coinInfos = MutableLiveData<ArrayList<CoinInfo>>()
+    private val coinInfos = SingleLiveEvent<ArrayList<CoinInfo>>()
+    private val downloadImageByName = MutableLiveData<String>()
+    private val downloadEveryImage = SingleLiveEvent<Void>()
+    private val updateKoreanByName = SingleLiveEvent<String>()
+    private val updateKoreans = SingleLiveEvent<Void>()
     private var timer = Timer()
     private val repository by lazy {
         RepositoryImpl(application)
@@ -41,6 +47,14 @@ class MainViewModel(application: Application) : ViewModel(){
     fun getCoinInfos() = coinInfos
 
     fun getSortMode() = repository.getSortMode()
+
+    fun getDownloadImageByName() = downloadImageByName
+
+    fun getDownloadEveryImage() = downloadEveryImage
+
+    fun getUpdateKoreanByName() = updateKoreanByName
+
+    fun getUpdateKoreans() = updateKoreans
 
     init {
         timer.schedule(object : TimerTask() {
@@ -65,42 +79,133 @@ class MainViewModel(application: Application) : ViewModel(){
         super.onCleared()
     }
 
-    fun getData() = addDisposable(repository.getData()
+    private fun getData() = addDisposable(repository.getData()
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.computation())
         .map {
             CoinInfosMaker.maker(repository.getExchange(), it.body()!!)
         }
         .observeOn(Schedulers.io())
+        /* .map {
+            it.add(CoinInfo().apply {
+                exchange = "Coinone"
+                coinName = "test1"
+                ticker = Ticker().apply {
+                    this.open = "3,400"
+                    this.close = "3,600"
+                    this.max = "4,000"
+                    this.min = "3,500"
+                    this.changeRate = "3.56"
+                    this.tradeVolume = "3,434"
+                    this.yesterdayClose = "3,000"
+                }
+            })
+            it
+        } */
         .map {
             if (repository.getAll().isNotEmpty()) {
                 val coinInfosOld = ArrayList(repository.getAll())
 
                 if (coinInfosOld.size > it.size || coinInfosOld.size < it.size || (it.size == coinInfosOld.size && !it.containsAll(coinInfosOld) && !coinInfosOld.containsAll(it)))
-                    updateDB(it)
+                    updateModel(it)
             }
             else
                 insertAll(it.toList())
 
             it
         }
-        .toFlowable()
+        .map {
+            if (getCoinNameKorean("BTC") == "" || getCoinNameKorean("BTC") == null) // insertAll()이 실행되었거나 실행되었지만 완료되지 않았을 때
+                updateKoreans.postValue(null)
+            else {
+                for (i in it.indices)
+                    it[i].coinNameKorean = getCoinNameKorean(it[i].coinName)!!
+            }
+
+            it
+        }
+        .toObservable()
         .observeOn(Schedulers.computation())
         .flatMap {
-            Flowable.fromIterable(it)
+            Observable.fromIterable(it)
         }
         .observeOn(Schedulers.io())
         .filter {
             getCoinViewCheck(it.coinName)
         }
         .map {
+            val coinNameKoreanTemp = getCoinNameKorean(it.coinName)
+
+            if (coinNameKoreanTemp == null)
+                updateKoreanByName.postValue(it.coinName)
+
+            else {
+                if (coinNameKoreanTemp == "신규 상장")
+                    updateKoreanByName.postValue(it.coinName)
+
+                it.coinNameKorean = coinNameKoreanTemp
+            }
+
+            it
+        }
+        .map {
+            if (!repository.getFirstRun()) {
+                if (it.coinName != "SHOW") {
+                    val imageFileTemp = getImageFile(it.coinName)
+
+                    if (imageFileTemp == null) {
+                        downloadImageByName.postValue(it.coinName)
+                        it.image = "https://storage.googleapis.com/cryptoculus-58556.appspot.com/images/${
+                            when (it.coinName) {
+                                "1INCH" -> "inch"
+                                "CON" -> "conun"
+                                "TRUE" -> "truechain"
+                                else -> it.coinName.lowercase()
+                            }
+                        }.png"
+                    }
+                    else {
+                        val junkBitmapCheck = BitmapFactory.decodeFile(imageFileTemp.toString()).sameAs(Bitmap.createBitmap(250, 250, Bitmap.Config.ARGB_8888))
+                        // true: junk, false: not junk
+
+                        if (junkBitmapCheck) {
+                            if (it.coinNameKorean != "신규 상장") {
+                                downloadImageByName.postValue(it.coinName)
+                                it.image = "https://storage.googleapis.com/cryptoculus-58556.appspot.com/images/${
+                                    when (it.coinName) {
+                                        "1INCH" -> "inch"
+                                        "CON" -> "conun"
+                                        "TRUE" -> "truechain"
+                                        else -> it.coinName.lowercase()
+                                    }
+                                }.png"
+                            }
+                            else
+                                it.image = null
+                        }
+                        else
+                            it.image = imageFileTemp.toString()
+                    }
+                }
+            }
+
+            it
+        }
+        .map {
             if (repository.getIdleCheck())
                 it.clicked = repository.getClicked(it.coinName)
+
             it
-        }.toList()
+        }
+        .toList()
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe(
             {
+                if (repository.getFirstRun() && repository.getAll().isNotEmpty()) {
+                    downloadEveryImage.value = null
+                    repository.putFirstRun(false)
+                }
+
                 if (!repository.getIdleCheck()) {
                     repository.refreshClickedAll(repository.getExchange())
                     changeIdleCheck()
@@ -108,16 +213,18 @@ class MainViewModel(application: Application) : ViewModel(){
 
                 coinInfos.value = ArrayList(it)
             },
-            { println("onError: ${it.message}")}
+            { println("onError in getData() of MainViewModel: ${it.message}")},
         )
     )
 
-    private fun updateDB(coinInfosNew: ArrayList<CoinInfo>) {
+    private fun updateModel(coinInfosNew: ArrayList<CoinInfo>) {
         val coinInfosOld = ArrayList(repository.getAll())
 
         for (i in coinInfosNew.indices) {
-            if (!coinInfosOld.contains(coinInfosNew[i]))
+            if (!coinInfosOld.contains(coinInfosNew[i])) {
+                downloadImageByName.postValue(coinInfosNew[i].coinName)
                 insert(coinInfosNew[i])
+            }
         }
 
         for (i in coinInfosOld.indices) {
@@ -133,6 +240,8 @@ class MainViewModel(application: Application) : ViewModel(){
     private fun delete(coinInfo: CoinInfo) = completableTemplate(repository.delete(coinInfo))
 
     fun updateClicked(coinName: String) = completableTemplate(repository.updateClicked(coinName))
+
+    private fun updateCoinNameKorean(coinNameKorean: String, coinName: String) = completableTemplate(repository.updateCoinNameKorean(coinNameKorean, coinName))
 
     private fun getCoinViewCheck(coinName: String) = repository.getCoinViewCheck(coinName)
 
@@ -170,9 +279,17 @@ class MainViewModel(application: Application) : ViewModel(){
         .observeOn(Schedulers.io())
         .subscribe())
 
+    private fun getCoinNameKorean(coinName: String): String? = repository.getCoinNameKorean(coinName)
+
+    private fun getCoinNameKoreansFirestore() = repository.getCoinNameKoreansFirestore()
+
+    private fun getImageFile(coinName: String): File? = repository.getImageFile("${coinName.lowercase()}.png")
+
     private fun putSortMode(sortMode: Int) = repository.putSortMode(sortMode)
 
     private fun addDisposable(disposable: Disposable) = compositeDisposable.add(disposable)
 
     private fun println(data: String) = Log.d("MainViewModel", data)
+
+    private fun println(tag: String, data: String) = Log.d(tag, data)
 }

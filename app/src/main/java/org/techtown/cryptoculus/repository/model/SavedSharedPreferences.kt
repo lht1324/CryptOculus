@@ -14,6 +14,10 @@ interface SavedSharedPreferences {
     fun getIdleCheck(): Boolean
 
     fun putIdleCheck(value: Boolean)
+
+    fun getFirstRun(): Boolean
+
+    fun putFirstRun(value: Boolean)
 }
 
 class SavedSharedPreferencesImpl(private val preferences: SharedPreferences) : SavedSharedPreferences {
@@ -28,4 +32,8 @@ class SavedSharedPreferencesImpl(private val preferences: SharedPreferences) : S
     override fun getIdleCheck() = preferences.getBoolean("idleCheck", true)
 
     override fun putIdleCheck(value: Boolean) = preferences.edit().putBoolean("idleCheck", value).apply()
+
+    override fun getFirstRun() = preferences.getBoolean("firstRun", true)
+
+    override fun putFirstRun(value: Boolean) = preferences.edit().putBoolean("firstRun", value).apply()
 }

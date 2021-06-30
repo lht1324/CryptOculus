@@ -1,22 +1,33 @@
 package org.techtown.cryptoculus.repository
 
 import android.app.Application
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import android.graphics.Bitmap
+import android.util.Log
+import com.bumptech.glide.Glide
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import org.techtown.cryptoculus.repository.model.*
 import org.techtown.cryptoculus.repository.network.Client
+import java.io.File
+import java.io.FileOutputStream
 
 class RepositoryImpl(private val application: Application) : Repository{
+    private val client by lazy {
+        Client()
+    }
+    private val imageFileHandler by lazy {
+        ImageFileHandler(application.cacheDir)
+    }
     private val coinInfoDao: CoinInfoDao by lazy {
         CoinInfoDatabase.getInstance(application)!!.coinInfoDao()
     }
-    // MODE_PRIVATE
     private val preferences by lazy {
-        SavedSharedPreferencesImpl(application.getSharedPreferences("preferences", 0))
+        SavedSharedPreferencesImpl(application.getSharedPreferences("preferences", 0)) // MODE_PRIVATE
     }
 
-    override fun getData() = Client().getData(getExchange())
+    override fun getData() = client.getData(getExchange())
+
+    override fun getImage(fileName: String) = client.getImage(Glide.with(application), fileName)
 
     override fun getAllByExchange(exchange: String) = coinInfoDao.getAllByExchange(exchange)
 
@@ -25,6 +36,8 @@ class RepositoryImpl(private val application: Application) : Repository{
     override fun getAll() = coinInfoDao.getAllByExchange(getExchange())
 
     override fun getCoinInfo(coinName: String) = coinInfoDao.getCoinInfo(getExchange(), coinName)
+
+    override fun getCoinNameKorean(coinName: String): String? = coinInfoDao.getCoinNameKorean(getExchange(), coinName)
 
     override fun getCoinViewCheck(coinName: String) = coinInfoDao.getCoinViewCheck(getExchange(), coinName)
 
@@ -35,6 +48,8 @@ class RepositoryImpl(private val application: Application) : Repository{
     override fun insert(coinInfo: CoinInfo) = coinInfoDao.insert(coinInfo)
 
     override fun insertAll(coinInfos: List<CoinInfo>) = coinInfoDao.insertAll(coinInfos)
+
+    override fun updateCoinNameKorean(coinNameKorean: String, coinName: String) = coinInfoDao.updateCoinNameKorean(coinNameKorean, getExchange(), coinName)
 
     override fun updateCoinViewCheck(coinName: String) = coinInfoDao.updateCoinViewCheck(!coinInfoDao.getCoinViewCheck(getExchange(), coinName), getExchange(), coinName)
 
@@ -57,4 +72,23 @@ class RepositoryImpl(private val application: Application) : Repository{
     override fun getIdleCheck() = preferences.getIdleCheck()
 
     override fun putIdleCheck(idleCheck: Boolean) = preferences.putIdleCheck(idleCheck)
+
+    override fun getFirstRun() = preferences.getFirstRun()
+
+    override fun putFirstRun(firstRun: Boolean) = preferences.putFirstRun(firstRun)
+
+    override fun saveImageFile(bitmap: Bitmap, fileName: String) = imageFileHandler.saveImageFile(bitmap, fileName)
+
+    override fun getImageFile(fileName: String): File? = imageFileHandler.getImageFile(fileName)
+
+    override fun getCoinNameKoreansFirestore() = Firebase.firestore
+        .collection("coinNameKoreans")
+        .document("sODwDG1Mwi1RMOxRSUPy")
+        .get()
+
+    fun putCoinNameKoreans(hashMap: HashMap<String, String>) = Firebase.firestore
+        .collection("coinNameKoreans")
+        .add(hashMap)
+
+    fun println(data: String) = Log.d("Repository", data)
 }

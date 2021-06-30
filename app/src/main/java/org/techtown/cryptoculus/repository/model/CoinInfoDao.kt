@@ -16,6 +16,9 @@ interface CoinInfoDao {
     @Query("Select * from coinInfoTable where exchange is :exchange and coinName is :coinName")
     fun getCoinInfo(exchange: String, coinName: String): CoinInfo
 
+    @Query("Select coinNameKorean from coinInfoTable where exchange is :exchange and coinName is :coinName")
+    fun getCoinNameKorean(exchange: String, coinName: String): String
+
     @Query("Select coinViewCheck from coinInfoTable where exchange is :exchange and coinName is :coinName")
     fun getCoinViewCheck(exchange: String, coinName: String): Boolean
 
@@ -30,6 +33,9 @@ interface CoinInfoDao {
 
     @Insert
     fun insertAll(coinInfos: List<CoinInfo>): Completable
+
+    @Query ("Update coinInfoTable set coinNameKorean=:coinNameKorean where exchange is :exchange and coinName is :coinName")
+    fun updateCoinNameKorean(coinNameKorean: String, exchange: String, coinName: String): Completable
 
     @Query("Update coinInfoTable set coinViewCheck=:coinViewCheck where exchange is :exchange and coinName is :coinName")
     fun updateCoinViewCheck(coinViewCheck: Boolean, exchange: String, coinName: String): Completable

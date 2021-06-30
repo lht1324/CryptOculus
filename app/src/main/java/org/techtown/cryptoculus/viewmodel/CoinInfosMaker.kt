@@ -2,6 +2,7 @@ package org.techtown.cryptoculus.viewmodel
 
 import android.util.Log
 import com.google.gson.Gson
+import com.google.gson.internal.LinkedTreeMap
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -13,10 +14,10 @@ import java.text.DecimalFormat
 import kotlin.math.roundToInt
 
 object CoinInfosMaker {
-    val formatterOthers by lazy {
+    private val formatterOthers by lazy {
         DecimalFormat("###,##0.00")
     }
-    lateinit var formatterPrice: DecimalFormat
+    private lateinit var formatterPrice: DecimalFormat
 
     fun maker(exchange: String, response: Any): ArrayList<CoinInfo> {
         val coinInfos = ArrayList<CoinInfo>()
@@ -33,7 +34,7 @@ object CoinInfosMaker {
                 for (i in coinNameOriginals.indices) {
                     coinInfos.add(CoinInfo().apply {
                         this.exchange = exchange
-                        coinName = coinNameOriginals[i].toUpperCase()
+                        coinName = coinNameOriginals[i].uppercase()
                         ticker = tickerFormatter(gson.fromJson(jsonObject.get(coinNameOriginals[i]).toString(), TickerCoinone::class.java))
                     })
                 }

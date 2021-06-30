@@ -2,7 +2,9 @@ package org.techtown.cryptoculus.view
 
 import android.content.Context
 import android.content.DialogInterface
+import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -13,6 +15,9 @@ import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 import com.jakewharton.rxbinding4.view.clicks
 import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.databinding.ItemCoinBinding
@@ -41,29 +46,17 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
 
     override fun getItemId(position: Int) = filteredCoinInfos[position].exchange.hashCode().toLong() + filteredCoinInfos[position].coinName.hashCode().toLong()
 
-    inner class ViewHolder(
-        private val binding: ItemCoinBinding,
-    ) : RecyclerView.ViewHolder(binding.root) {
+    inner class ViewHolder(private val binding: ItemCoinBinding) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(coinInfo: CoinInfo) = binding.apply {
             this.coinInfo = coinInfo
-            coinNameKorean = getCoinNameKorean(coinInfo.coinName)
             changeRate = getChangeRate(coinInfo.ticker.changeRate)
 
-            val drawableId = root.resources.getIdentifier(
-                when (coinInfo.coinName) {
-                    "1INCH" -> "inch"
-                    "CON" -> "conun"
-                    "TRUE" -> "truechain"
-                    else -> coinInfo.coinName.toLowerCase()
-                },
-                "drawable",
-                root.context.packageName)
-
-            imageView.setImageResource(
-                    if (drawableId != 0) drawableId
-                    else R.drawable.default_image
-            )
+            Glide.with(root)
+                .load(coinInfo.image)
+                .placeholder(R.drawable.default_image)
+                .error(R.drawable.default_image)
+                .into(imageView)
 
             textView3.setTextColor(
                 if (coinInfo.ticker.changeRate!= "∞") { // 당일 상장되어 전일종가가 없을 때 오류 발생
@@ -98,20 +91,8 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
                 ToggleAnimation.expand(layoutExpand)
             else
                 ToggleAnimation.collapse(layoutExpand)
+
             return clicked
-        }
-
-        private fun getCoinNameKorean(coinName: String): String {
-            val id = binding.root.resources.getIdentifier(
-                if (coinName != "1INCH") coinName else "INCH",
-                "string",
-                "org.techtown.cryptoculus"
-            )
-
-            return if (id != 0)
-                    binding.root.resources.getString(id)
-                else
-                    "신규 상장"
         }
 
         private fun getChangeRate(originalChangeRate: String) = if (originalChangeRate != "∞")
@@ -141,15 +122,15 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
             else {
                 if (coinInfos.isNotEmpty()) {
                     for (i in coinInfos.indices) {
-                        val id = mContext.resources.getIdentifier(
+                        /* val id = mContext.resources.getIdentifier(
                             if (coinInfos[i].coinName != "1INCH") coinInfos[i].coinName else "INCH",
                             "string",
                             "org.techtown.cryptoculus"
                         )
                         val coinNameKorean = if (id != 0) mContext.resources.getString(id)
-                        else "신규 상장"
+                        else "신규 상장" */
 
-                        if("${coinInfos[i].coinName} / $coinNameKorean".toLowerCase().contains(charString.toLowerCase()))
+                        if("${coinInfos[i].coinName} / $${coinInfos[i].coinNameKorean}".lowercase().contains(charString.lowercase()))
                             filteredList.add(coinInfos[i])
                     }
                 }

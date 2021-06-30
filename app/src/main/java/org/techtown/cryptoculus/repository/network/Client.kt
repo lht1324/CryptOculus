@@ -1,13 +1,8 @@
 package org.techtown.cryptoculus.repository.network
 
 import android.util.Log
-import androidx.lifecycle.MutableLiveData
-import io.reactivex.Observable
+import com.bumptech.glide.RequestManager
 import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
-import org.techtown.cryptoculus.pojo.UpbitMarket
-import org.techtown.cryptoculus.repository.model.CoinInfo
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
@@ -17,7 +12,7 @@ class Client {
     fun getData(exchange: String): Single<Response<Any>> {
         return when (exchange) {
             "Coinone" -> getService("https://api.coinone.co.kr/").getCoinone("all")
-            "Bithumb" -> getService("https://api.bithumb.com/").getBithumb()
+            "Bithumb" -> getService("https://api.bithumb.com/").getBithumb() as Single<Response<Any>>
             else -> getService("https://api.upbit.com/v1/").getUpbit(getMarketsUpbit()) as Single<Response<Any>>
         }
     }
@@ -40,6 +35,9 @@ class Client {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(RetrofitService::class.java)
+
+    fun getImage(requestManager: RequestManager, fileName: String) = requestManager.asBitmap()
+        .load("https://storage.googleapis.com/cryptoculus-58556.appspot.com/images/$fileName")
 
     private fun println(data: String) = Log.d("Client", data)
 }

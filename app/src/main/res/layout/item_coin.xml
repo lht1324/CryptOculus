@@ -7,9 +7,6 @@
             name="coinInfo"
             type="org.techtown.cryptoculus.repository.model.CoinInfo" />
         <variable
-            name="coinNameKorean"
-            type="String" />
-        <variable
             name="changeRate"
             type="String" />
     </data>
@@ -43,7 +40,7 @@
                     android:layout_marginStart="5dp"
                     android:layout_marginLeft="5dp"
                     android:padding="3dp"
-                    app:srcCompat="@drawable/basic" />
+                    app:srcCompat="@drawable/default_image" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -59,7 +56,7 @@
                         android:id="@+id/textView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text='@{coinInfo.coinName + " / " + coinNameKorean}'
+                        android:text='@{coinInfo.coinName + " / " + coinInfo.coinNameKorean}'
                         android:gravity="left"
                         android:maxLines="1"
                         android:textSize="20sp" />

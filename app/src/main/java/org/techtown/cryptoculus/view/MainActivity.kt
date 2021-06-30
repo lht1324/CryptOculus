@@ -23,6 +23,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.jakewharton.rxbinding4.widget.textChanges
 import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.databinding.ActivityMainBinding
+import org.techtown.cryptoculus.viewmodel.FirestoreViewModel
+import org.techtown.cryptoculus.viewmodel.ImageViewModel
 import org.techtown.cryptoculus.viewmodel.MainViewModel
 import org.techtown.cryptoculus.viewmodel.SortingViewModel
 import java.util.*
@@ -30,8 +32,6 @@ import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.N)
 class MainActivity : AppCompatActivity() {
-    // 고칠 것
-    // 파일 저장 권한
     private lateinit var binding: ActivityMainBinding
     private lateinit var callback: OnBackPressedCallback
     private val mainAdapter: MainAdapter by lazy {
@@ -43,6 +43,12 @@ class MainActivity : AppCompatActivity() {
     }
     private val sortingViewModel by lazy {
         ViewModelProvider(this, SortingViewModel.Factory(application)).get(SortingViewModel::class.java)
+    }
+    private val imageViewModel by lazy {
+        ViewModelProvider(this, ImageViewModel.Factory(application)).get(ImageViewModel::class.java)
+    }
+    private val firestoreViewModel by lazy {
+        ViewModelProvider(this, FirestoreViewModel.Factory(application)).get(FirestoreViewModel::class.java)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -142,6 +148,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun init() {
         mainAdapter.setHasStableIds(true)
+        showLoadingScreen(true)
         
         binding.apply {
             recyclerView.apply {
@@ -179,12 +186,29 @@ class MainActivity : AppCompatActivity() {
 
         mainViewModel.getCoinInfos().observe(this, { coinInfos ->
             mainAdapter.setItems(sortingViewModel.sortCoinInfos(coinInfos))
-            showLoadingScreen(false)
+            if ((coinInfos.size > 0 && coinInfos[0].coinNameKorean.isNotEmpty()) || coinInfos.size == 0)
+                showLoadingScreen(false)
+        })
+
+        mainViewModel.getDownloadImageByName().observe(this, { coinName ->
+            imageViewModel.downloadImage(coinName)
+        })
+
+        mainViewModel.getDownloadEveryImage().observe(this, { _ ->
+            imageViewModel.downloadEveryImage()
+        })
+
+        mainViewModel.getUpdateKoreanByName().observe(this, { coinName ->
+            firestoreViewModel.getCoinNameKoreanFirestore(coinName)
+        })
+
+        mainViewModel.getUpdateKoreans().observe(this, { _ ->
+            firestoreViewModel.getCoinNameKoreansFirestore()
         })
 
         mainAdapter.openChart.observe(this, { coinName ->
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(when (mainViewModel.getSelection()) {
-                0 -> "https://coinone.co.kr/chart?site=coinone${coinName.toLowerCase()}&unit_time=15m"
+                0 -> "https://coinone.co.kr/chart?site=coinone${coinName.lowercase()}&unit_time=15m"
                 1 -> "https://m.bithumb.com/trade/chart/${coinName}_KRW"
                 else -> "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-$coinName&tab=chart"
             })))
@@ -214,7 +238,7 @@ class MainActivity : AppCompatActivity() {
 
         supportFragmentManager
                 .beginTransaction()
-                .add(R.id.constraintLayout, PreferencesFragment(application))
+                .add(R.id.constraintLayout, ChoiceFragment(application))
                 .addToBackStack(null)
                 .commit()
     }
@@ -263,6 +287,7 @@ class MainActivity : AppCompatActivity() {
     private fun showLoadingScreen(show: Boolean) = binding.apply {
         if (show) {
             swipeRefreshLayout.visibility = View.GONE
+            recyclerView.visibility = View.GONE
 
             progressBar.apply {
                 isIndeterminate = true
@@ -271,6 +296,7 @@ class MainActivity : AppCompatActivity() {
         }
         else {
             swipeRefreshLayout.visibility = View.VISIBLE
+            recyclerView.visibility = View.VISIBLE
 
             progressBar.apply {
                 isIndeterminate = false

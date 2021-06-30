@@ -80,7 +80,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:text="@string/optionCoin"
+                android:text="@string/optionChoice"
                 android:textColor="@drawable/text_click"
                 android:textSize="18sp" />
 
