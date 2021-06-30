@@ -30,15 +30,9 @@ Kotlin 100%로 개발되었으며, MVVM 패턴을 적용해 개발하다 Reposit
 * Rx
   * RxKotlin
   * RxBinding
-* RecyclerView
 * Firebase Firestore
-* SharedPreferences
 * Glide
 * Retrofit2
-  * RxJava2CallAdapterFactory
-  * GsonConverterFactory
-* Gson
-* Firebase Firestore
 
 ## 코드
 
