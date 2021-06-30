@@ -8,11 +8,11 @@ Kotlin 100%로 개발되었으며, MVVM 패턴을 적용해 개발하다 Reposit
 
 ## 버전
 
-* 1.0
+* [1.0](https://github.com/lht1324/CryptOculus-ver.Java-Legacy)
 
 프로토타입. 자바로 제작.
 
-* 1.1
+* [1.1](https://github.com/lht1324/CryptOculus-ver.Kotlin-Legacy)
 
 자바에서 코틀린으로 변경, 디자인 패턴 미적용
 
