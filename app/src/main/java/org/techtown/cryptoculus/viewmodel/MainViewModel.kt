@@ -52,12 +52,13 @@ class MainViewModel(val application: Application) : ViewModel(){
     init {
         timer.schedule(object : TimerTask() {
             override fun run() {
-                getData()
+                processExchangeData()
             }
         }, 0,3000)
     }
 
     override fun onCleared() {
+        // 아이템이 클릭되었는지 여부를 나타내는 clicked 변수를 전부 false로 바꿔준다
         if (repository.getAllByExchange("Coinone").isNotEmpty())
             refreshClickedAll("Coinone")
 
@@ -72,29 +73,13 @@ class MainViewModel(val application: Application) : ViewModel(){
         super.onCleared()
     }
 
-    private fun getData() = addDisposable(repository.getData()
+    private fun processExchangeData() = addDisposable(repository.getData()
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.computation())
         .map {
             CoinInfosMaker.maker(repository.getExchange(), it.body()!!)
         }
         .observeOn(Schedulers.io())
-        /* .map {
-            it.add(CoinInfo().apply {
-                exchange = "Coinone"
-                coinName = "test1"
-                ticker = Ticker().apply {
-                    this.open = "3,400"
-                    this.close = "3,600"
-                    this.max = "4,000"
-                    this.min = "3,500"
-                    this.changeRate = "3.56"
-                    this.tradeVolume = "3,434"
-                    this.yesterdayClose = "3,000"
-                }
-            })
-            it
-        } */
         .map {
             if (repository.getAll().isNotEmpty()) {
                 val coinInfosOld = ArrayList(repository.getAll())
@@ -146,7 +131,7 @@ class MainViewModel(val application: Application) : ViewModel(){
                 if (it.coinName != "SHOW") {
                     val imageFileTemp = getImageFile(it.coinName)
 
-                    if (imageFileTemp == null) {
+                    if (imageFileTemp == null) { // 신규 상장인 경우
                         downloadImageByName.postValue(it.coinName)
                         it.image = "https://storage.googleapis.com/cryptoculus-58556.appspot.com/images/${
                             when (it.coinName) {
@@ -157,11 +142,11 @@ class MainViewModel(val application: Application) : ViewModel(){
                             }
                         }.png"
                     }
-                    else {
+                    else { // 파일 다운로드를 시도한 적이 있을 때
                         val junkBitmapCheck = BitmapFactory.decodeFile(imageFileTemp.toString()).sameAs(Bitmap.createBitmap(250, 250, Bitmap.Config.ARGB_8888))
                         // true: junk, false: not junk
 
-                        if (junkBitmapCheck) {
+                        if (junkBitmapCheck) { // 이미지가 서버에 없어 다운로드 못 하고 있던 파일일 경우
                             if (it.coinNameKorean != "신규 상장") {
                                 downloadImageByName.postValue(it.coinName)
                                 it.image = "https://storage.googleapis.com/cryptoculus-58556.appspot.com/images/${
@@ -206,7 +191,7 @@ class MainViewModel(val application: Application) : ViewModel(){
 
                 coinInfos.value = ArrayList(it)
             },
-            { println("onError in getData() of MainViewModel: ${it.message}")},
+            { println("onError in processExchangeData() of MainViewModel: ${it.message}")},
         )
     )
 
@@ -234,8 +219,6 @@ class MainViewModel(val application: Application) : ViewModel(){
 
     fun updateClicked(coinName: String) = completableTemplate(repository.updateClicked(coinName))
 
-    private fun updateCoinNameKorean(coinNameKorean: String, coinName: String) = completableTemplate(repository.updateCoinNameKorean(coinNameKorean, coinName))
-
     private fun getCoinViewCheck(coinName: String) = repository.getCoinViewCheck(coinName)
 
     fun changeExchange(position: Int) {
@@ -262,7 +245,7 @@ class MainViewModel(val application: Application) : ViewModel(){
         repository.putIdleCheck(!repository.getIdleCheck())
 
         if (!repository.getIdleCheck())
-            getData()
+            processExchangeData()
     }
 
     private fun refreshClickedAll(exchange: String) = completableTemplate(repository.refreshClickedAll(exchange))
@@ -273,8 +256,6 @@ class MainViewModel(val application: Application) : ViewModel(){
         .subscribe())
 
     private fun getCoinNameKorean(coinName: String): String? = repository.getCoinNameKorean(coinName)
-
-    private fun getCoinNameKoreansFirestore() = repository.getCoinNameKoreansFirestore()
 
     private fun getImageFile(coinName: String): File? = repository.getImageFile("${coinName.lowercase()}.png")
 
