@@ -2,9 +2,7 @@ package org.techtown.cryptoculus.view
 
 import android.content.Context
 import android.content.DialogInterface
-import android.graphics.Bitmap
 import android.graphics.Color
-import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -16,13 +14,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.transition.Transition
 import com.jakewharton.rxbinding4.view.clicks
 import org.techtown.cryptoculus.R
 import org.techtown.cryptoculus.databinding.ItemCoinBinding
 import org.techtown.cryptoculus.repository.model.CoinInfo
-import java.util.*
 import kotlin.collections.ArrayList
 
 class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdapter.ViewHolder>(), Filterable {
@@ -122,14 +117,6 @@ class MainAdapter(private val mContext: Context) : RecyclerView.Adapter<MainAdap
             else {
                 if (coinInfos.isNotEmpty()) {
                     for (i in coinInfos.indices) {
-                        /* val id = mContext.resources.getIdentifier(
-                            if (coinInfos[i].coinName != "1INCH") coinInfos[i].coinName else "INCH",
-                            "string",
-                            "org.techtown.cryptoculus"
-                        )
-                        val coinNameKorean = if (id != 0) mContext.resources.getString(id)
-                        else "신규 상장" */
-
                         if("${coinInfos[i].coinName} / $${coinInfos[i].coinNameKorean}".lowercase().contains(charString.lowercase()))
                             filteredList.add(coinInfos[i])
                     }

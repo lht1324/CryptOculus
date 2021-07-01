@@ -2,12 +2,8 @@ package org.techtown.cryptoculus.viewmodel
 
 import android.app.Application
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
-import android.os.Build
-import android.util.Base64
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.request.target.CustomTarget
@@ -16,8 +12,6 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.techtown.cryptoculus.repository.RepositoryImpl
-import org.techtown.cryptoculus.repository.model.CoinInfo
-import java.io.ByteArrayOutputStream
 
 class ImageViewModel(val application: Application) : ViewModel() {
     private val repository by lazy {

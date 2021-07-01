@@ -2,14 +2,9 @@ package org.techtown.cryptoculus.viewmodel
 
 import android.util.Log
 import com.google.gson.Gson
-import com.google.gson.internal.LinkedTreeMap
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
 import org.json.JSONObject
 import org.techtown.cryptoculus.pojo.*
 import org.techtown.cryptoculus.repository.model.CoinInfo
-import retrofit2.Response
 import java.text.DecimalFormat
 import kotlin.math.roundToInt
 

@@ -7,7 +7,6 @@ import android.view.animation.Transformation
 
 class ToggleAnimation {
     companion object {
-
         fun expand(view: View) = view.startAnimation(expandAction(view))
 
         private fun expandAction(view: View): Animation {

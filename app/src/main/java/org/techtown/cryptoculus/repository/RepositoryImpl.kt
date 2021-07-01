@@ -9,7 +9,6 @@ import com.google.firebase.ktx.Firebase
 import org.techtown.cryptoculus.repository.model.*
 import org.techtown.cryptoculus.repository.network.Client
 import java.io.File
-import java.io.FileOutputStream
 
 class RepositoryImpl(private val application: Application) : Repository{
     private val client by lazy {
@@ -85,10 +84,6 @@ class RepositoryImpl(private val application: Application) : Repository{
         .collection("coinNameKoreans")
         .document("sODwDG1Mwi1RMOxRSUPy")
         .get()
-
-    fun putCoinNameKoreans(hashMap: HashMap<String, String>) = Firebase.firestore
-        .collection("coinNameKoreans")
-        .add(hashMap)
 
     fun println(data: String) = Log.d("Repository", data)
 }

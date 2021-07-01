@@ -13,7 +13,6 @@ import android.widget.ArrayAdapter
 import android.widget.ListPopupWindow
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.AppCompatSpinner
@@ -29,8 +28,6 @@ import org.techtown.cryptoculus.viewmodel.MainViewModel
 import org.techtown.cryptoculus.viewmodel.SortingViewModel
 import java.util.*
 
-
-@RequiresApi(Build.VERSION_CODES.N)
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var callback: OnBackPressedCallback
@@ -76,7 +73,12 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        showToast("종료하려면 뒤로 가기 버튼을\n한 번 더 눌러주세요.")
+        Toast.makeText(
+            this@MainActivity,
+            "종료하려면 뒤로 가기 버튼을\n한 번 더 눌러주세요.",
+            Toast.LENGTH_SHORT
+        ).show()
+
         backPressedLast = System.currentTimeMillis()
     }
 
@@ -309,6 +311,4 @@ class MainActivity : AppCompatActivity() {
         .hideSoftInputFromWindow(currentFocus!!.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
 
     private fun println(data: String) = Log.d("MainAcitivity", data)
-
-    private fun showToast(data: String) = Toast.makeText(this@MainActivity, data, Toast.LENGTH_SHORT).show()
 }

@@ -59,7 +59,6 @@ class PreferencesDialog(private val mContext: Context, var sortMode: Int) : Dial
                     override fun onNothingSelected(p0: AdapterView<*>?) { }
                 }
             }
-            // textView2.setBackgroundColor(R.drawable.text_click)
             textView2.clicks().subscribe {
                 mode = 1
                 this@PreferencesDialog.dismiss()

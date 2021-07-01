@@ -1,14 +1,11 @@
 package org.techtown.cryptoculus.repository.network
 
 import io.reactivex.Single
-import okhttp3.ResponseBody
 import org.techtown.cryptoculus.pojo.*
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.GET
-import retrofit2.http.Path
 import retrofit2.http.Query
-import retrofit2.http.Streaming
 
 interface RetrofitService {
     // https://api.coinone.co.kr/ticker/?currency=all

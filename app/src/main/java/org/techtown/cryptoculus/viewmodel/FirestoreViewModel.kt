@@ -52,8 +52,6 @@ class FirestoreViewModel(application: Application) : ViewModel() {
             println("onFailure in getCoinNameKoreanFirestore($coinName): ${it.message}")
         }
 
-    private fun getCoinNameKorean(coinName: String) = repository.getCoinNameKorean(coinName)
-
     private fun updateCoinNameKorean(coinNameKorean: String, coinName: String) = addDisposable(repository.updateCoinNameKorean(coinNameKorean, coinName)
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.io())

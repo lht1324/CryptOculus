@@ -14,7 +14,7 @@ import org.techtown.cryptoculus.databinding.ItemChoiceBinding
 import org.techtown.cryptoculus.repository.model.CoinInfo
 import kotlin.collections.ArrayList
 
-class ChoiceAdapter() : RecyclerView.Adapter<ChoiceAdapter.ViewHolder>(), Filterable {
+class ChoiceAdapter : RecyclerView.Adapter<ChoiceAdapter.ViewHolder>(), Filterable {
     var coinInfos = ArrayList<CoinInfo>()
     var filteredCoinInfos = ArrayList<CoinInfo>()
     val clickedItem = MutableLiveData<String>()
