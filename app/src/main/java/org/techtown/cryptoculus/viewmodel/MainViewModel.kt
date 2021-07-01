@@ -73,7 +73,7 @@ class MainViewModel(val application: Application) : ViewModel(){
         super.onCleared()
     }
 
-    private fun processExchangeData() = addDisposable(repository.getData()
+    private fun processExchangeData() = addDisposable(repository.getExchangeData()
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.computation())
         .map {

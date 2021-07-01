@@ -30,7 +30,7 @@ class ChoiceViewModel(application: Application) : ViewModel() {
     }
 
     init {
-        getData()
+        processExchangeData()
     }
 
     override fun onCleared() {
@@ -38,7 +38,7 @@ class ChoiceViewModel(application: Application) : ViewModel() {
         super.onCleared()
     }
     
-    private fun getData() = addDisposable(repository.getAllAsSingle()
+    private fun processExchangeData() = addDisposable(repository.getAllAsSingle()
         .subscribeOn(Schedulers.io())
         .observeOn(AndroidSchedulers.mainThread())
         .map {
