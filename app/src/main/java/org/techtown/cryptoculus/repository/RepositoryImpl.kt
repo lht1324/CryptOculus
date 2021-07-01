@@ -24,7 +24,7 @@ class RepositoryImpl(private val application: Application) : Repository{
         SavedSharedPreferencesImpl(application.getSharedPreferences("preferences", 0)) // MODE_PRIVATE
     }
 
-    override fun getData() = client.getData(getExchange())
+    override fun getExchangeData() = client.getExchangeData(getExchange())
 
     override fun getImage(fileName: String) = client.getImage(Glide.with(application), fileName)
 

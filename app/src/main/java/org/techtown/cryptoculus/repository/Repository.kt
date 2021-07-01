@@ -11,7 +11,7 @@ import retrofit2.Response
 import java.io.File
 
 interface Repository {
-    fun getData(): Single<Response<Any>>
+    fun getExchangeData(): Single<Response<Any>>
 
     fun getImage(fileName: String): RequestBuilder<Bitmap>
 

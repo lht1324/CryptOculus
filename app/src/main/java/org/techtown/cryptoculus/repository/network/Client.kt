@@ -9,7 +9,7 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 
 class Client {
-    fun getData(exchange: String): Single<Response<Any>> {
+    fun getExchangeData(exchange: String): Single<Response<Any>> {
         return when (exchange) {
             "Coinone" -> getService("https://api.coinone.co.kr/").getCoinone("all")
             "Bithumb" -> getService("https://api.bithumb.com/").getBithumb() as Single<Response<Any>>
