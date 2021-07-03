@@ -6,6 +6,13 @@
 
 Kotlin 100%로 개발되었으며, MVVM 패턴을 적용해 개발하다 Repository 패턴으로 변경했고 RxKotlin을 사용해 비동기 처리를 구현했습니다.
 
+| MVVM, Repository 패턴 다이어그램 |
+| :---: |
+| <img width="600" alt="mvvm pattern" src="https://user-images.githubusercontent.com/33789695/124359243-0ba07100-dc5f-11eb-847c-d0fe0a3846e5.png"> |
+| MVVM 패턴 |
+| <img width="600" alt="repository pattern" src="https://user-images.githubusercontent.com/33789695/124359274-32f73e00-dc5f-11eb-98c5-9bf058bcddb1.png"> |
+| Repository 패턴 |
+
 ## 버전
 
 * [1.0](https://github.com/lht1324/CryptOculus-ver.Java-Legacy/tree/master/app/src/main/java/org/techtown/cryptoculus)
@@ -18,14 +25,7 @@ Kotlin 100%로 개발되었으며, MVVM 패턴을 적용해 개발하다 Reposit
 
 * 1.2
 
-리포지토리 패턴 적용. 데이터 업데이트 시 플레이스토어 업데이트가 필수였지만 파이어베이스를 이용해 실시간으로 변경 사항을 받아오도록 해 플레이스토어 의존을 최소화.
-
-| MVVM, 리포지토리 패턴 다이어그램 |
-| :---: |
-| <img width="600" alt="mvvm pattern" src="https://user-images.githubusercontent.com/33789695/124359243-0ba07100-dc5f-11eb-847c-d0fe0a3846e5.png"> |
-| MVVM 패턴 |
-| <img width="600" alt="repository pattern" src="https://user-images.githubusercontent.com/33789695/124359274-32f73e00-dc5f-11eb-98c5-9bf058bcddb1.png"> |
-| 리포지토리 패턴 |
+Repository 패턴 적용. 데이터 업데이트 시 플레이스토어 업데이트가 필수였지만 파이어베이스를 이용해 실시간으로 변경 사항을 받아오도록 해 플레이스토어 의존을 최소화.
 
 ## 사용된 라이브러리
 
