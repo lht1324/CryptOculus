@@ -6,9 +6,8 @@
 
 Kotlin 100%로 개발되었으며, MVVM 패턴을 적용해 개발하다 Repository 패턴으로 변경했고 RxKotlin을 사용해 비동기 처리를 구현했습니다.
 
-| MVVM, Repository 패턴 다이어그램 |
-| :---: |
 | <img width="600" alt="mvvm pattern" src="https://user-images.githubusercontent.com/33789695/124359243-0ba07100-dc5f-11eb-847c-d0fe0a3846e5.png"> |
+| :---: |
 | MVVM 패턴 |
 | <img width="600" alt="repository pattern" src="https://user-images.githubusercontent.com/33789695/124359274-32f73e00-dc5f-11eb-98c5-9bf058bcddb1.png"> |
 | Repository 패턴 |
@@ -78,6 +77,18 @@ Repository Interface와 Repository Interface를 구현하는 클래스입니다.
 [Client.kt](https://github.com/lht1324/CryptOculus/blob/master/app/src/main/java/org/techtown/cryptoculus/repository/network/Client.kt)
 
 Retrofit, Glide 등 네트워크를 이용하는 라이브러리의 기능이 필요할 때 사용합니다.
+
+## UI
+
+ * **MainActivity**
+
+| <img width="400" alt="main1" src="https://user-images.githubusercontent.com/33789695/124812177-3e6ba180-df9e-11eb-8ec6-34f584f1f0bb.jpg"> | <img width="400" alt="main2" src="https://user-images.githubusercontent.com/33789695/124812212-49becd00-df9e-11eb-8ad0-b331b0cb36dc.jpg"> | <img width="400" alt="main3" src="https://user-images.githubusercontent.com/33789695/124812251-53e0cb80-df9e-11eb-8061-44b13a2d4f6b.jpg"> |
+| :---: | :---: | :---: |
+
+ * **ChoiceActivity와 결과**
+
+| <img width="400" alt="choice1" src="https://user-images.githubusercontent.com/33789695/124812253-5511f880-df9e-11eb-8019-09a2f4763431.jpg"> | <img width="400" alt="choice2" src="https://user-images.githubusercontent.com/33789695/124812256-55aa8f00-df9e-11eb-9c3e-51e33aa9c039.jpg"> | <img width="400" alt="choice3" src="https://user-images.githubusercontent.com/33789695/124812260-55aa8f00-df9e-11eb-9b93-700c4fca7a80.jpg"> |
+| :---: | :---: | :---: |
 
 ## License
 
